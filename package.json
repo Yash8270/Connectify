@@ -1,0 +1,13 @@
+{
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  },
+  
+    "scripts": {
+      "both": "concurrently \"npm run server\" \"npm run client\"",
+      "server": "nodemon ./backend/index.js",
+      "client": "npm start --prefix frontend"
+    }
+  
+  
+}

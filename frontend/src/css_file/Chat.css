@@ -1,0 +1,327 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+button:hover {
+    cursor: pointer;
+}
+
+.chatpage {
+    padding-top: 15vh;
+    /* padding-left: 2vw;
+    padding-right: 1vw; */
+    /* background: linear-gradient(to right,#8c9eb5ab,#447cc1ab); */
+    background-color: #1A1A1A;
+    display: flex;
+    flex-direction: row;
+    height: 100vh;
+    /* justify-content: space-evenly; */
+
+}
+
+.chatpage .convo-name {
+    display: flex;
+    flex-direction: column;
+    width: 23vw;
+    margin-left: 4vw;
+    margin-right: 4vw;
+ 
+}
+
+.convo-name {
+    background-color: #282828;
+    border-radius: 14px;
+}
+
+.convo-name, .convo-detail {
+    /* background-color: red; */
+    height: 80vh;
+}
+
+.chatpage .convo-detail {
+    display: flex;
+    flex-direction: column;
+    width: 60vw;
+}
+
+
+.chatuser::-webkit-scrollbar {
+    background-color: #4e4c4c;
+    border-radius: 14px;
+}
+
+.chatuser::-webkit-scrollbar-thumb {
+    background: #727070;
+    border-radius: 14px;
+}
+
+.chatpage .searchchat {
+    position: sticky;
+    /* box-shadow: 0 5px 10px rgba(0, 0, 0, 0.5); */
+    /* background-color: #282828; */
+}
+
+#search-chat {
+    padding-left: 0.5em;
+    margin: 1em 1em 1em 1em;
+    width: 20em;
+    height: 3em;
+    /* background-color: #ffffffab;
+    color: #072371; */
+    background-color: rgba(71, 70, 70, 0.51);
+    color: white;
+    border-radius: 12px;
+    border-color: transparent;
+
+}
+
+.chatpage .chatname {
+    padding-left: 1em;
+    padding-top: 1em;
+    color: white;
+    /* background-color:#072371; */
+    /* background-color: #121c51; */
+    background-color: #282828;
+    font-weight: bold;
+    font-size: 1.2em;
+    height: 10vh;
+    border-radius: 14px 14px 0px 0px;
+}
+
+.chatpage .chatuser {
+    /* background-color: gray; */
+    /* background-color: rgba(15, 13, 13, 0.26); */
+    display: flex;
+    flex-direction: column;
+    overflow-y: scroll;
+}
+
+.chatpage .chatuser .user-item {
+  display: flex;
+  justify-content:space-between ;
+    flex: 0 0 auto;
+    padding-top: 1em;
+    padding-left: 1em;
+    margin-right: 1em;
+    height: 5em;
+}
+
+.user-item img {
+  /* width: 5em;
+  height: 5em;   */
+  max-width: 4em;
+  border-radius: 14px;
+  border: 1px solid yellow;
+}
+
+
+.chat-options {
+  padding-top: 1em;
+}
+
+.chat-dropdown {
+  /* position: relative; */
+  position: absolute;
+  left: 310px;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  z-index: 100;
+}
+
+.chat-dropdown button {
+  -webkit-text-fill-color: black;
+  padding: 10px;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+}
+
+.chat-dropdown button:hover {
+  background-color: yellow;
+}
+
+#userchatbtn {
+    background-color: transparent;
+    border: none;
+    font-size: 1em;
+}
+
+.chatpage .chatinput {
+    /* background: linear-gradient(to right,#a4b7d5,#708cb9); */
+    display: flex;
+    flex-direction: row;
+    height: 10vh;
+    background-color: #212121;
+    padding-left: 1em;
+    padding-top: 1em;
+    padding-bottom: 1em;
+    border-radius: 0px 0px 14px 14px;
+    /* border-top: 1px solid black; */
+    /* box-shadow: 0 -5px 10px rgba(0, 0, 0, 0.5); */
+}
+
+.reaction {
+    padding-top: 0.2em;
+    margin-right: 4em;
+}
+
+.chatsend {
+    padding-top: 0.2em;
+}
+
+#mssg {
+    padding-left: 0.5em;
+    width: 40em;
+    min-height: 2.8em;
+    height:fit-content;
+    margin-right: 1em;
+    background-color: #4e4c4c;
+    border-radius: 14px;
+    border-color:transparent;
+    margin-right: 17em;
+}
+
+
+/* Chat Area Styling */
+.chatarea {
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    gap: 10px;
+    overflow-y: auto;
+    height: 65vh;
+    background-color: rgba(15, 13, 13, 0.26);
+  }
+
+  .chatarea::-webkit-scrollbar {
+    background-color: #4e4c4c;
+    border-radius: 14px;
+}
+
+.chatarea::-webkit-scrollbar-thumb {
+    background: #727070;
+    border-radius: 14px;
+}
+  
+  /* Date Separator */
+  .date-separator {
+    text-align: center;
+    color: white; /* White color for the date text */
+    font-size: 0.9em;
+    margin: 10px 0;
+  }
+  
+  /* Sent Message */
+  .sendmssg {
+    display: flex;
+    justify-content: flex-end; /* Aligns message to the right */
+  }
+  
+  .first-send {
+    max-width: 60%; /* Restrict message bubble width */
+    background-color: #4e4c4c;
+    color: black; /* Black text color for better readability */
+    padding: 10px 15px;
+    border-radius: 10px 10px 0 10px; /* Round corners */
+    position: relative;
+    right: 1em;
+    word-wrap: break-word;
+    text-align: left;
+  }
+  
+  .sendpart {
+    background-color: white; /* White background for sent message */
+    color: black; /* Black text color */
+    padding: 10px;
+    border-radius: 8px; /* Slight rounding for the inner part */
+  }
+  
+  /* Received Message */
+  .recvmssg {
+    display: flex;
+    justify-content: flex-start; /* Aligns message to the left */
+  }
+  
+  .first-receive {
+    max-width: 60%; /* Restrict message bubble width */
+    background-color: #4e4c4c;
+    color: black; /* Black text color for better readability */
+    padding: 10px 15px;
+    border-radius: 10px 10px 10px 0; /* Round corners */
+    position: relative;
+    word-wrap: break-word;
+    text-align: left;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    left: 1em;
+  }
+  
+  .recvpart {
+    background-color: yellow; /* Yellow background for received message */
+    color: black; /* Black text color */
+    padding: 10px;
+    border-radius: 8px; /* Slight rounding for the inner part */
+  }
+  
+  /* Time Styling */
+  .sendtime, .recvtime {
+    font-size: 12px;
+    color: white; /* White color for time */
+    margin-bottom: 5px;
+  }
+  
+  /* Seen Status */
+  .seen-status {
+    font-size: 12px;
+    color: white; /* White color for seen status */
+    text-align: right;
+    margin-top: 5px;
+  }
+  
+  /* Ellipsis Menu */
+  .message-options {
+    position: relative;
+  }
+  
+  .ellipsis-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #333;
+    font-size: 16px;
+    padding: 5px;
+  }
+  
+  .options-dropdown {
+    /* position: relative; */
+    position: absolute;
+    top: 20px;
+    left: -64px;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    z-index: 100;
+  }
+  
+  .options-dropdown button {
+    -webkit-text-fill-color: black;
+    padding: 10px;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+  }
+  
+  .options-dropdown button:hover {
+    background-color: yellow;
+  }
+  
+
+  

@@ -1,0 +1,161 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Avenir', sans-serif;
+}
+
+button:hover {
+    cursor:pointer;
+}
+
+button {
+    -webkit-text-fill-color: white;
+}
+
+.form-body {
+    padding-top: 25vh;
+    display: flex;
+    /* background: linear-gradient(to right,#8c9eb5ab,#447cc1ab); */
+    background: linear-gradient(270deg, #000000 12%, #4d4d4d 100%);
+    justify-content: center;
+    align-content: center;
+    width: 100vw;
+    height: 100vh;
+}
+
+.form-container {
+    position:relative;
+    width: 50vw;
+    height: 65vh;
+    display: flex;
+    flex-direction: row;
+    /* flex-wrap: wrap; */
+    max-height: 100vh;
+    justify-content: space-evenly;
+    align-content: center;
+    border: 1px solid white;
+    border-radius: 16px;
+    box-shadow: 0.5em 0.5em 1em black;   
+}
+
+.form-container .login {
+    margin-top: 2em;
+}
+
+.form-container .signin {
+    padding-left: 1em;
+}
+
+
+#username,#userinput,#pass,#password,#logbtn {
+    display: block;
+}
+
+#username,#userinput,#pass,#password {
+    margin-bottom: 1em;
+}
+
+#userinput,#password {
+    border-radius: 5px;
+    background-color: transparent;
+}
+
+#logbtn {
+    margin-top: 2em;
+    /* background-color: #072371; */
+    background-color: rgb(194, 194, 44);
+    -webkit-text-fill-color: black;
+    width: 8em;
+    height: 3em;
+    font-size: 1em;
+    font-weight: bold;
+    border-radius: 8px;
+}
+
+
+#newuser,#newinput,#email,#eid,#newpass,#newpassword,#confpass,#confpassword,#signbtn {
+    display: block;
+}
+
+#username,#pass,#newuser,#email,#newpass,#confpass {
+    font-size: 1.5em;
+    font-weight: bold;
+}
+
+#userinput,#newinput,#eid,#newpassword,#confpassword,#password {
+    width: 16vw;
+    height: 6.4vh;
+}
+
+#newuser {
+    margin-top: 0.5em;
+}
+
+#newuser,#newinput,#newpass,#newpassword,#confpass,#confpassword,#email,#eid {
+    margin-bottom: 0.5em;
+}
+
+#newinput,#newpassword,#confpassword,#eid {
+    border-radius: 5px;
+    background-color: transparent;
+}
+
+#signbtn {
+    /* background-color: #072371; */
+    background-color: rgb(194, 194, 44);
+    -webkit-text-fill-color: black;
+    width: 8em;
+    height: 3em;
+    font-size: 1em;
+    font-weight: bold;
+    border-radius: 8px;
+}
+
+
+
+.panel {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position:absolute;
+    width: 25vw;
+    height: 65vh;
+    left: 0vw;
+    background-color:rgb(154, 154, 27);
+    color: white;
+    font-weight: bold;
+    transition: left 1s ease, border-radius 1s ease;
+}
+
+.panel .paneltxt {
+    font-size: 1.4em;
+    padding-left: 1.2em;
+    padding-right: 1.2em;
+    margin-bottom: 2em;
+}
+
+#panelbtn {
+    background: linear-gradient(270deg, #000000 12%, #666666 100%);
+    /* color: #072371; */
+    width: 8em;
+    height: 3em;
+    font-size: 1em;
+    font-weight: bold;
+    border-radius: 8px;
+}
+
+
+.right {
+    left: 25vw;
+    border-radius: 0px 16px 16px 0px;
+}
+
+.left {
+    left: 0vw;
+    border-radius: 16px 0px 0px 16px;
+}
+
+
+

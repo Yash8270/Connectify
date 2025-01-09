@@ -1,0 +1,241 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  html, body {
+    height: 100%;
+    margin: 0;
+  }
+
+  .about-container {
+    padding-top: 15vh;
+    padding-left: 1vw;
+    padding-right: 1vw;
+    padding-bottom: 8vh;
+    display: grid;
+    grid-template-columns: auto auto auto auto;
+    grid-column-gap: 3vw;
+    grid-row-gap: 3vw;
+    height: fit-content;
+    /* background: linear-gradient(to right,#8c9eb5ab,#447cc1ab); */
+    background: linear-gradient(270deg, #000000 12%, #666666 100%);
+    /* overflow-y: scroll; */
+  }
+
+  .about-container .about-connectify {
+     grid-column: 1/5;
+     border: 3px solid white;
+     /* border-radius: 10px;
+     outline: 5px solid #072371;
+     outline-offset: 0.1em; */
+  }
+
+  .abouthead {
+    font-size: 2vw;
+    text-align: center;
+    margin-top: 1.3vw;
+    margin-bottom: 1vw;
+    font-weight:bold;
+  }
+
+  .aboutconnect {
+    font-size: 1.4em;
+  }
+
+  .about-container .why {
+    grid-column: 1/5;
+    border: 3px solid white;
+     /* border-radius: 10px;
+     outline: 5px solid #072371;
+     outline-offset: 0.1em; */
+  }
+
+  .whyhead {
+    font-size: 2vw;
+    text-align: center;
+    margin-top: 1.3vw;
+    margin-bottom: 1vw;
+    font-weight:bold;
+  }
+
+  .whyconnect {
+    font-size: 1.4em;
+    list-style: circle inside;
+  }
+
+  .about-container .mission {
+    grid-column: 1/5;
+    border: 3px solid white;
+    /* border-radius: 10px;
+    outline: 5px solid #072371;
+    outline-offset: 0.1em; */
+  }
+
+  .missionhead {
+    font-size: 2vw;
+    text-align: center;
+    margin-top: 1.3vw;
+    margin-bottom: 1vw;
+    font-weight:bold;
+  }
+
+  .missionconnect {
+    font-size: 1.4em;
+  }
+
+  .about-container .features {
+    grid-column: 1/5;
+    border: 3px solid white;
+    /* border-radius: 10px;
+    outline: 5px solid #072371;
+    outline-offset: 0.1em; */
+    font-size: 1.5vw;
+    font-weight: bold;
+  }
+
+  .about-container .communicate {
+    border: 3px solid white;
+     /* border-radius: 10px;
+     outline: 5px solid #072371;
+     outline-offset: 0.1em; */
+    max-width: 50vw;
+    width: 20vw;
+    height: 20vw;
+    box-shadow: 1em 1em 2em black;
+    transition: transform 2s ease;
+  }
+
+  .comhead {
+    font-size: 1.7em;
+    font-weight: bold;
+  }
+
+  .comconnect {
+    font-size: 1.1em;
+  }
+
+.comimage {
+    padding-left: 1vw;
+}  
+
+  #com {
+    width: 15em;
+    height: 10em;
+  }
+
+  .about-container .network {
+    border: 3px solid white;
+    /* border-radius: 10px;
+    outline: 5px solid #072371;
+    outline-offset: 0.1em; */
+    max-width: 50vw;
+    width: 20vw;
+    height: 20vw;
+    box-shadow: 1em 1em 2em black;
+    transition: transform 2s ease;
+  }
+
+  .nethead {
+    font-size: 1.7em;
+    font-weight: bold;
+  }
+
+  .netconnect {
+    font-size: 1.1em;
+  }
+
+
+.netimage {
+    padding-left: 1vw;
+}  
+
+  #net {
+    width: 15em;
+    height: 10em;
+  }
+
+  .about-container .dashboard {
+    border: 3px solid white;
+    /* border-radius: 10px;
+    outline: 5px solid #072371;
+    outline-offset: 0.1em; */
+    max-width: 50vw;
+    width: 20vw;
+    height: 20vw;
+    box-shadow: 1em 1em 2em black;
+    transition: transform 2s ease;
+  }
+
+  .dashhead {
+    font-size: 1.7em;
+    font-weight: bold;
+  }
+
+  .dashconnect {
+    font-size: 1.1em;
+  }
+
+
+.dashimage {
+    padding-left: 1vw;
+}  
+
+  #dash {
+    width: 15em;
+    height: 10em;
+  }
+
+  .about-container .cross {
+    border: 3px solid white;
+    /* border-radius: 10px;
+    outline: 5px solid #072371;
+    outline-offset: 0.1em; */
+    max-width: 50vw;
+    width: 20vw;
+    height: 20vw;
+    box-shadow: 1em 1em 2em black;
+    transition: transform 2s ease;
+  }
+
+  .crosshead {
+    font-size: 1.4em;
+    font-weight: bold;
+  }
+
+  .crossconnect {
+    font-size: 1.1em;
+  }
+
+
+.crossimage {
+    padding-left: 1vw;
+}  
+
+  #cr {
+    width: 15em;
+    height: 10em;
+  }
+
+  .cross:hover, .network:hover, .communicate:hover, .dashboard:hover {
+    transform: rotateY(360deg);
+
+  }
+
+  
+  .footer-branding {
+    /* background-color: #072371; */
+    background: linear-gradient(270deg, #000000 12%, #666666 100%);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center; 
+    justify-content: space-between; 
+    padding: 1rem 2rem;
+    color: white;
+     /* Fix navbar at the top */
+    top: 0; /* Ensures it sticks to the top */
+    width: 100%; /* Make it span the full width */
+    z-index: 100; /* Keep it above other elements */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Optional: Add shadow for better visibility */
+  }
