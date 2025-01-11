@@ -77,6 +77,42 @@ button:hover {
 
 }
 
+.suggestion-list-user {
+  color: black;
+  position: absolute;
+  top: 2.5em;
+  left: 0;
+  width: 13.5em;
+  /* background: #fff; */
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  z-index: 10;
+}
+
+.suggestion-list-user {
+  background-color: #1A1A1A;
+  margin-left: 1em;
+  margin-top: 1em;
+}
+
+.suggestion-item {
+  padding: 8px;
+  border-bottom: 1px solid #eee;
+  cursor: pointer;
+  font-size: 0.85em;
+}
+
+.suggestion-item:last-child {
+  border-bottom: none; /* Remove border for the last item */
+}
+
+.suggestion-item:hover {
+  background: rgb(137, 137, 137); /* Highlight on hover */
+}
+
 .chatpage .chatname {
     padding-left: 1em;
     padding-top: 1em;

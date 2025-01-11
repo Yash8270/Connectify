@@ -8,19 +8,6 @@ const Home = () => {
 
   return (
     <>
-      {/* <nav>
-        <div className="nav-container">
-          <div className="name">Connectify</div>
-
-          <div className="center-nav">
-            <div className="home">Home</div>
-            <div className="about">About</div>
-            <div className="contact">Contact</div>
-          </div>
-
-          <div className="login">Login/SignIn</div>
-        </div>
-      </nav> */}
       <div className="connect">
         <div className="inform">
           <div className="informhead">Welcome to our Connectify Services</div>

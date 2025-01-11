@@ -370,7 +370,7 @@ if (durationInMinutes < 1) {
               value= {query} onChange={handleInputChange}></input>
 
             {suggestions.length > 0 && (
-            <ul className="suggestion-list">
+            <ul className="suggestion-list-user">
               {suggestions.map((user, index) => (
                 <li key={index} className="suggestion-item" onClick={async () => await handleChatfromSuggestion(user)}>
                   {user || 'No username found'}

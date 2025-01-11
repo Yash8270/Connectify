@@ -3,6 +3,7 @@ import { useState, useContext } from 'react';
 import {useNavigate} from 'react-router-dom';
 import '../css_file/Login.css';
 import Connect_Context from '../context/Connectcontext';
+import Pic from './Pic';
 
 const Login = () => {
 
@@ -13,6 +14,7 @@ const Login = () => {
 
     const [position, setposition] = useState('right');
     const [text,settext] = useState(signtext);
+      const [show, setShow] = useState(false);
 
     const toggleAnimation = () => {
         setposition((prev) => (prev === "right" ? "left" : "right")); 
@@ -30,11 +32,17 @@ const Login = () => {
     const handlesignin = (e) => {
         e.preventDefault();
         console.log(signdata);
-        if(signdata.password !== signdata.confpassword) {
+        if(signdata.password !== signdata.confpassword || signdata.password === '') {
             alert("Please enter password and it's confirm password same");
         }
+        else if (signdata.username === '' || signdata.email === '') {
+            alert("Please enter username and password");
+        }
+
         else {
-            signin(signdata.username, signdata.email, signdata.password,signdata.profilepic);
+            setShow(true);
+            // signin(signdata.username, signdata.email, signdata.password,signdata.profilepic);
+
         }
     }
 
@@ -87,7 +95,7 @@ const Login = () => {
       </button></div>
             </div>
         </div>
-       
+        <Pic show={show} setShow={setShow} signdata= {signdata}/>
        </div> 
         </>
     );

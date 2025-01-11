@@ -57,7 +57,7 @@ useEffect(() => {
   });
 
   return () => {
-    socket.off('notif');
+    socket.off('privateMessage');
   }
 
 },[socket]);
@@ -101,6 +101,7 @@ useEffect(() => {
     Cookies.remove('username');
     Cookies.remove('followers');
     Cookies.remove('following');
+
   }
 
 

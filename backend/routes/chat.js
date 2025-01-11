@@ -7,8 +7,6 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const Chat = require('../models/Chat');
 
-const JWT_SECRET = '##########';
-
 router.post('/newchat/:id', fetchuser, async (req, res) => {
     try {
         const recid = req.params.id;
@@ -118,6 +116,7 @@ router.patch('/chatseen/:id', fetchuser, async (req, res) => {
     });
     await findchat.save();
 
+    console.log("Chats are in a seen zone");
     res.status(200).json({ success: true, message: 'Last message marked as seen' });
 
 

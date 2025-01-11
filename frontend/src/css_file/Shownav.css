@@ -98,13 +98,17 @@
   top: 2.5em;
   left: 0;
   width: 13.5em;
-  background: #fff;
+  /* background: #fff; */
   border: 1px solid #ccc;
   border-radius: 4px;
   list-style-type: none;
   padding: 0;
   margin: 0;
   z-index: 10;
+}
+
+.suggestion-list {
+  background-color: #1A1A1A;
 }
 
 /* Suggestion List Item */
