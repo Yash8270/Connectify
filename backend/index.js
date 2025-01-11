@@ -7,7 +7,14 @@ const http = require('http');
 const {Server} = require('socket.io');
 const cookieParser = require('cookie-parser');
 
-require('dotenv').config();
+const dotenv = require('dotenv');
+const result = dotenv.config();
+
+if (result.error) {
+  console.error('Error loading .env file:', result.error);
+} else {
+  console.log('Loaded variables:', result.parsed);
+}
 
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -35,6 +42,8 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/post', require('./routes/post'));
 app.use('/api/follow', require('./routes/follow'));
 app.use('/api/chat', require('./routes/chat')); 
+
+console.log("API_KEY:",process.env.CLOUDINARY_API_KEY);
 
 const users = {}; // Map to store user IDs and their socket IDs
 

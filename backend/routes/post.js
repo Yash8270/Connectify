@@ -5,7 +5,7 @@ const User = require('../models/User');
 const Post = require('../models/Post');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-
+require('dotenv').config();
 const multer = require('multer');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const cloudinary = require('cloudinary').v2;

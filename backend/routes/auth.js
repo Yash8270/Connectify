@@ -5,7 +5,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const fetchuser = require('../middleware/fetchuser');
 
-const JWT_SECRET = "##########";
+const JWT_SECRET = process.env.JWT_SECRET;
 
 
 router.get("/all", fetchuser, async (req, res) => {
