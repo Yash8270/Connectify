@@ -75,13 +75,13 @@ const Api = (props) => {
     // console.log("The cookie: ",authdata);
 
     //Sign-in
-    const signin = async (username, email, password,profilepic) => {
+    const signin = async (formData) => {
         const response = await fetch(`${host}/api/auth/signin`, {
             method: 'POST',
             headers :{
-                'Content-Type':'application/json'
+                // 'Content-Type':'application/json'
             }, 
-            body: JSON.stringify({username,email,password,profilepic})                         
+            body: formData                         
         });
 
         const json = await response.json();

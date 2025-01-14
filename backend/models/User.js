@@ -34,6 +34,16 @@ const UserSchema = new Schema({
         default: ' '
     },
 
+    bio: {
+
+    },
+
+    skills: [ {
+        type: String,
+        default:''
+         
+   }],
+
     followRequests: [
         {
           from: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, 

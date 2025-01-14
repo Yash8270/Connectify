@@ -26,7 +26,6 @@ const storage = new CloudinaryStorage({
 
 const upload = multer({ storage });  
 
-const JWT_SECRET = '##########';
 
 router.post('/postpic', fetchuser, upload.single('image'), async (req, res) => {
     try {

@@ -4,13 +4,14 @@ import Connect_Context from '../context/Connectcontext';
 
 const Pic = ({ show, setShow, signdata }) => {
   const context = useContext(Connect_Context);
-  const { cloudimage, authdata } = context;
+  const { cloudimage, authdata, signin } = context;
 
   const [image, setImage] = useState(null); // State to store the image file
   const [PostImage, setPostImage] = useState(null);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = React.createRef(); // Ref for hidden file input
-  const [desc, setdesc] = useState({text:'New Post'});
+  const [skill, setskill] = useState([]);
+  const [bio, setbio] = useState('');
 
   // Close modal
   const handleModal = () => {
@@ -39,19 +40,25 @@ const Pic = ({ show, setShow, signdata }) => {
   // Upload image to Cloudinary
   const handlePost = async () => {
     const formData = new FormData();
-    formData.append('description', desc.text);
-    formData.append('image', image); // Append the image
+    // formData.append('description', desc.text);
+    formData.append('username', signdata.username);
+    formData.append('email', signdata.email);
+    formData.append('password', signdata.password);
+    formData.append('bio', bio);
+    formData.append('skill', skill);
+    formData.append('profilepic', image); // Append the image
 
     setUploading(true);
     try {
-      const result = await cloudimage(formData, authdata.authtoken); // Upload function
+      // const result = await cloudimage(formData, authdata.authtoken); // Upload function
+      const result = await signin(formData);
       console.log(result);
 
       if (result.success) {
-        alert('Post uploaded');
+        alert('Successfully signin');
         handleModal(); // Close modal after successful upload
       } else {
-        alert('Upload failed');
+        alert('failed');
       }
     } catch (error) {
       console.error('Error uploading:', error);
@@ -60,6 +67,13 @@ const Pic = ({ show, setShow, signdata }) => {
       setUploading(false);
     }
   };
+
+  const updateskill = (index, value) => {
+    const newskill = [...skill];
+    newskill[index] = value;
+    setskill(newskill); 
+
+  }
 
   return (
     <>
@@ -77,8 +91,17 @@ const Pic = ({ show, setShow, signdata }) => {
 
             {/* Post Description */}
             <div className="modal-description">
-              <div className="description-label">Post Description:</div>
-              <input id="modaldesc" placeholder="Enter your thoughts for your post" onChange={(e) => setdesc({...desc, text: e.target.value})} />
+              <div className="description-label">Enter your bio:</div>
+              <input id="modaldesc" placeholder="Enter your thoughts for your post" onChange={(e) => setbio({...bio, value: e.target.value})} />
+            </div>
+
+            <div className="modal-description">
+              <div className="description-label">Enter your top 5 skills</div>
+              <input id="modaldesc" onChange={(e) => updateskill(0, e.target.value)} />
+              <input id="modaldesc" onChange={(e) => updateskill(1, e.target.value)} />
+              <input id="modaldesc" onChange={(e) => updateskill(2, e.target.value)} />
+              <input id="modaldesc" onChange={(e) => updateskill(3, e.target.value)} />
+              <input id="modaldesc" onChange={(e) => updateskill(4, e.target.value)} />
             </div>
 
             {/* Image Preview */}

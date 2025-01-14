@@ -228,13 +228,13 @@ const Showcase = () => {
              </div>
             </div>
             <div className='post-data'>
-                <div className='followings'>
-               <div><img id='followimg' src={''} alt={`${fpic[0].profilepic}`}></img></div>
-               <div><img id='followimg' src={second} alt='Profile'></img></div>
-               <div><img id='followimg' src={third} alt='Profile'></img></div>
-               <div><img id='followimg' src={fourth} alt='Profile'></img></div>
-               <div><img id='followimg' src={fifth} alt='Profile'></img></div>
-                </div>
+               
+                     <div className='followings'>
+                     {fpic.length > 0 ? fpic.map((f,index) => (
+                     <div><img id='followimg' src={f.profilepic} alt='Profile'></img></div>
+                    )): <div>You don't have any followers</div>}
+                      </div>
+              
             <div className="posts">
                 {posts.map((post, index) => (
                     <>
@@ -334,42 +334,18 @@ const Showcase = () => {
                     <div className='other'>
                     <div className="recommendation-head">Accounts You don't follow back</div>
                 <div className="recommend">
-                    <div className="rec-user">
-                        <div class='rec-photo'><img src={''} alt={followback[0].profilepic}></img></div>
-                        <div className='rec-name'>{followback[0].username}</div>
-                        <div className='rec-follow'>Follows you</div>
-                        <div className='rec-btn'>
-                            <button id='removebtn'>Remove</button>
-                            <button id='fbackbtn'>Follow Back</button>
-                        </div>
-                        </div>
+                    {followback.length > 0 ? followback.map((f, index) => (
                         <div className="rec-user">
-                        <div class='rec-photo'><img src={seventh}></img></div>
-                        <div className='rec-name'>Bob</div>
+                        <div class='rec-photo'><img src={f.profilepic} alt='profile'></img></div>
+                        <div className='rec-name'>{f.username}</div>
                         <div className='rec-follow'>Follows you</div>
                         <div className='rec-btn'>
                             <button id='removebtn'>Remove</button>
                             <button id='fbackbtn'>Follow Back</button>
                         </div>
                         </div>
-                        <div className="rec-user">
-                        <div class='rec-photo'><img src={eigth}></img></div>
-                        <div className='rec-name'>Carlsen</div>
-                        <div className='rec-follow'>Follows you</div>
-                        <div className='rec-btn'>
-                            <button id='removebtn'>Remove</button>
-                            <button id='fbackbtn'>Follow Back</button>
-                        </div>
-                        </div>
-                        <div className="rec-user">
-                        <div class='rec-photo'><img src={pic}></img></div>
-                        <div className='rec-name'>Goku</div>
-                        <div className='rec-follow'>Follows you</div>
-                        <div className='rec-btn'>
-                            <button id='removebtn'>Remove</button>
-                            <button id='fbackbtn'>Follow Back</button>
-                        </div>
-                        </div>
+                    )): <div>There are no such accounts</div>}
+                    
                 </div>
                 </div>
                 )}
