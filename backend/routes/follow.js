@@ -6,7 +6,6 @@ const Post = require('../models/Post');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-const JWT_SECRET = '##########';
 
 
 router.get('/selfreq', fetchuser, async (req, res) => {
@@ -189,6 +188,67 @@ router.patch('/unfollow/:id', fetchuser, async (req, res) => {
 
         // console.log(update_followingside);
         res.json(updateuser);
+
+    } catch(error) {
+        console.log(error.message);
+        return res.status(500).send('Internal server error');
+    }
+});
+
+router.get('/followingpic', fetchuser, async (req, res) => {
+    try {
+        const authid = req.user.id;
+
+        const user = await User.findById(authid).populate({
+            path: 'following',
+            select: 'profilepic username', // Select only the fields you need
+          });
+      
+          if (!user) {
+            throw new Error('User not found');
+          }
+      
+          // Extract the following array with profile pictures
+          const followingWithProfilePics = user.following.map(followingUser => ({
+            username: followingUser.username,
+            profilepic: followingUser.profilepic,
+          }));
+      
+          res.json(followingWithProfilePics);
+
+    } catch(error) {
+        console.log(error.message);
+        return res.status(500).send('Internal server error');
+    }
+});
+
+router.get('/nfback', fetchuser, async (req, res) => {
+    try {
+        const authid = req.user.id;
+
+        const user = await User.findById(authid)
+      .populate({
+        path: 'followers',
+        select: 'profilepic username', // Select only the fields you need
+      })
+      .select('following followers'); // Ensure only necessary fields are fetched
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Filter followers who are not in the following array
+    const nonFollowedBackFollowers = user.followers.filter(
+      (follower) => !user.following.includes(follower._id.toString())
+    );
+
+    // Map the result to extract username and profilepic
+    const followersWithProfilePics = nonFollowedBackFollowers.map((follower) => ({
+      username: follower.username,
+      profilepic: follower.profilepic,
+    }));
+
+    res.json(followersWithProfilePics);
 
     } catch(error) {
         console.log(error.message);

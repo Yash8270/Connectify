@@ -32,9 +32,12 @@ const Showcase = () => {
     const [visible, setvisible] = useState(null);
     const [replies, setreplies] = useState([]);
     const [replytext, setreplytext] = useState({text:''});
+    const [followback, setfollowback] = useState([{username:'', profilepic:''}]);
+    const [fpic, setfpic] = useState([{username:'', profilepic:''}]);
 
     const context = useContext(Connect_Context);
-    const {authdata, setauthdata, getallpost, idtouser, likepost, dislikepost, getcom, postcom, getreply,postreply } = context;
+    const {authdata, setauthdata, getallpost, idtouser, likepost, dislikepost, getcom, postcom, getreply,postreply, profile_following,
+        only_followers } = context;
   
         const inputRef = useRef(null);
 
@@ -149,12 +152,36 @@ const Showcase = () => {
             }
         };
 
+      
+
         fetchPosts();
+
+       
         
     }, [authdata]);
 
+    useEffect(() => {
 
-      console.log(authdata);
+        const fetchProfilePics = async () => {
+
+            const following_pics = await profile_following();
+            setfpic(following_pics);
+            const dont_f_back = await only_followers();
+            setfollowback(dont_f_back);
+
+            console.log("ACC DONT FBACK (USEEFFECT): ", dont_f_back);
+            console.log("FOLLOWING PICSS (USEEFFECT): ", following_pics);
+
+        }
+
+        fetchProfilePics();
+        console.log("ACC DONT FBACK: ", followback);
+        console.log("FOLLOWING PICSS: ", fpic);
+    },[]);
+    
+    
+
+    //   console.log(authdata);
 
     return (
         <div className="show">
@@ -202,7 +229,7 @@ const Showcase = () => {
             </div>
             <div className='post-data'>
                 <div className='followings'>
-               <div><img id='followimg' src={first} alt='Profile'></img></div>
+               <div><img id='followimg' src={''} alt={`${fpic[0].profilepic}`}></img></div>
                <div><img id='followimg' src={second} alt='Profile'></img></div>
                <div><img id='followimg' src={third} alt='Profile'></img></div>
                <div><img id='followimg' src={fourth} alt='Profile'></img></div>
@@ -308,8 +335,8 @@ const Showcase = () => {
                     <div className="recommendation-head">Accounts You don't follow back</div>
                 <div className="recommend">
                     <div className="rec-user">
-                        <div class='rec-photo'><img src={sixth}></img></div>
-                        <div className='rec-name'>Alice</div>
+                        <div class='rec-photo'><img src={''} alt={followback[0].profilepic}></img></div>
+                        <div className='rec-name'>{followback[0].username}</div>
                         <div className='rec-follow'>Follows you</div>
                         <div className='rec-btn'>
                             <button id='removebtn'>Remove</button>

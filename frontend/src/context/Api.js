@@ -26,7 +26,7 @@ const Api = (props) => {
            
 
         if(authtoken && userid) {
-            console.log("FOUND");
+            // console.log("FOUND");
             setauthdata({authtoken: authtoken, userid: userid});
         }
     
@@ -499,12 +499,41 @@ const Api = (props) => {
     const json = await response.json();
     return json;
    }
+
+   //Following ProfilePic
+   const profile_following = async () => {
+    const response = await fetch(`${host}/api/follow/followingpic`, {
+        method: 'GET',
+        headers: {
+            'Content-Type':'application/json'
+        },
+        credentials:'include'
+    });
+
+    const json = await response.json();
+    return json;
+   }
+
+   //Accounts You don't follow back
+   const only_followers = async () => {
+    const response = await fetch(`${host}/api/follow/nfback`, {
+        method:'GET',
+        headers: {
+            'Content-Type':'application/json'
+        },
+        credentials:'include'
+    });
+
+    const json = await response.json();
+    return json;
+   }
     
     return (
         <Connect_Context.Provider value={{ authdata,setauthdata,signin, login_fxn, getallpost, idtouser, likepost, dislikepost, getcom,
          postcom, getreply, postreply,selfpost, getchat, userchat, chatting, cloudimage, searchuser, followname, setfollowname,
           followpost, frequest,nfollow,setnfollow, acceptreq, followreq, setfollowreq, rejectreq, currentChat, setcurrentChat,
-         firstchat, reqstatus, unfuser, seenstatus, delMessage, delchat, nchat, setnchat, notification, socket }}>
+         firstchat, reqstatus, unfuser, seenstatus, delMessage, delchat, nchat, setnchat, notification, socket, profile_following,
+          only_followers }}>
             {props.children}
         </Connect_Context.Provider>
     );
