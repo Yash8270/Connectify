@@ -45,7 +45,13 @@ router.post("/signin", upload.single('profilepic'), async (req, res) => {
   try {
     const { username, email, password, bio, skill } = req.body;
     console.log(req.body);
-    const imageUrl = req.file.path;
+    let imageUrl = '';
+    if(req.file.path) {
+       imageUrl = req.file.path;
+    }
+    else {
+      imageUrl='heloooo'; 
+    }
     console.log(username);
     
     let user_email = await User.findOne({ email: req.body.email });
@@ -58,13 +64,18 @@ router.post("/signin", upload.single('profilepic'), async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const secPass = await bcrypt.hash(req.body.password, salt);
     console.log(secPass);
+
+    const skillsArray = Array.isArray(skill)
+      ? skill // If it's already an array, use it as is
+      : skill?.split(',').map(s => s.trim()) || []; // Otherwise, split the string and trim whitespace
+
     let new_user = await User.create({
       username: req.body.username,
       email: req.body.email,
       password: secPass,
       profilepic: imageUrl,
       bio: req.body.bio,
-      skills: req.body.skill
+      skills: skillsArray
     });
 
     const user_id = {
@@ -75,11 +86,55 @@ router.post("/signin", upload.single('profilepic'), async (req, res) => {
 
     const jwtData = jwt.sign(user_id, JWT_SECRET);
     console.log(jwtData);
-    res.json(new_user);
+    res.status(200).json({ authtoken: jwtData , userid: user_id.user.id, user_detail: new_user});
   } catch (error) {
     console.log(error.message);
-    return res.status(500).send("Internal server error");
-  }
+    const { username, email, password, bio, skill } = req.body;
+    console.log(req.body);
+    // let imageUrl = '';
+    // if(req.file.path) {
+    //    imageUrl = req.file.path;
+    // }
+    // else {
+      imageUrl='heloooo'; 
+    // }
+    console.log(username);
+    
+    let user_email = await User.findOne({ email: req.body.email });
+    let user_name = await User.findOne({ username: req.body.username });
+
+    if (user_email || user_name) {
+      return res.json({ error: "User already exist" });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const secPass = await bcrypt.hash(req.body.password, salt);
+    console.log(secPass);
+
+    const skillsArray = Array.isArray(skill)
+      ? skill // If it's already an array, use it as is
+      : skill?.split(',').map(s => s.trim()) || []; // Otherwise, split the string and trim whitespace
+
+    let new_user = await User.create({
+      username: req.body.username,
+      email: req.body.email,
+      password: secPass,
+      profilepic: imageUrl,
+      bio: req.body.bio,
+      skills: skillsArray
+    });
+
+    const user_id = {
+      user: {
+        id: new_user.id,
+      },
+    };
+
+    const jwtData = jwt.sign(user_id, JWT_SECRET);
+    console.log(jwtData);
+    res.status(200).json({ authtoken: jwtData , userid: user_name.id, user_detail: new_user});
+    // return res.status(500).send("Internal server error");
+  } 
 });
 
 router.post("/login", async (req, res) => {

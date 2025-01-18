@@ -86,8 +86,40 @@ const Api = (props) => {
 
         const json = await response.json();
         // console.log(json);
+        setauthdata(json);
+        // setauthdata({authtoken: Cookies.get('auth-token'), userid: Cookies.get('userid')});
 
-        alert('Successfully Sign-In');
+        Cookies.set('auth-token', json.authtoken, {
+            expires: 1,
+            secure:true,
+            sameSite:'None'
+        });
+
+        Cookies.set('userid', json.userid, {
+            expires: 1,
+            secure:true,
+            sameSite:'None'
+        });
+
+        Cookies.set('username', json.user_detail.username, {
+            expires: 1,
+            secure:true,
+            sameSite:'None'
+        });
+
+        Cookies.set('followers', json.user_detail.followers.length, {
+            expires: 1,
+            secure:true,
+            sameSite:'None'
+        });
+
+        Cookies.set('following', json.user_detail.following.length, {
+            expires: 1,
+            secure: true,
+            sameSite:'None'
+        });
+        return json;
+        // alert('Successfully Sign-In');
     }
 
     //login

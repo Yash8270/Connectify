@@ -1,8 +1,11 @@
 import React, { useContext, useState } from 'react';
 import '../css_file/Post.css';
 import Connect_Context from '../context/Connectcontext';
+import {useNavigate} from 'react-router-dom';
 
 const Pic = ({ show, setShow, signdata }) => {
+  
+  const navigate = useNavigate();
   const context = useContext(Connect_Context);
   const { cloudimage, authdata, signin } = context;
 
@@ -11,7 +14,7 @@ const Pic = ({ show, setShow, signdata }) => {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = React.createRef(); // Ref for hidden file input
   const [skill, setskill] = useState([]);
-  const [bio, setbio] = useState('');
+  const [bio, setbio] = useState({text:''});
 
   // Close modal
   const handleModal = () => {
@@ -39,32 +42,38 @@ const Pic = ({ show, setShow, signdata }) => {
 
   // Upload image to Cloudinary
   const handlePost = async () => {
+    let result;
     const formData = new FormData();
     // formData.append('description', desc.text);
     formData.append('username', signdata.username);
     formData.append('email', signdata.email);
     formData.append('password', signdata.password);
-    formData.append('bio', bio);
+    formData.append('bio', bio.text);
     formData.append('skill', skill);
     formData.append('profilepic', image); // Append the image
 
     setUploading(true);
     try {
       // const result = await cloudimage(formData, authdata.authtoken); // Upload function
-      const result = await signin(formData);
-      console.log(result);
-
+       result = await signin(formData);
+       console.log(result);
       if (result.success) {
         alert('Successfully signin');
+
         handleModal(); // Close modal after successful upload
+        
+        
       } else {
         alert('failed');
       }
     } catch (error) {
       console.error('Error uploading:', error);
-      alert('There was an error uploading the image.');
+      // alert('There was an error uploading the image.');
     } finally {
       setUploading(false);
+      console.log(skill);
+      navigate(`/showcase/${result.userid}`);
+
     }
   };
 
@@ -92,7 +101,7 @@ const Pic = ({ show, setShow, signdata }) => {
             {/* Post Description */}
             <div className="modal-description">
               <div className="description-label">Enter your bio:</div>
-              <input id="modaldesc" placeholder="Enter your thoughts for your post" onChange={(e) => setbio({...bio, value: e.target.value})} />
+              <input id="modaldesc" placeholder="Enter your thoughts for your post" onChange={(e) => setbio({...bio, text: e.target.value})} />
             </div>
 
             <div className="modal-description">
