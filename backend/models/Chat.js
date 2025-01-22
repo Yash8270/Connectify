@@ -4,9 +4,15 @@ const { Schema } = mongoose;
 const ChatSchema = new Schema({
   participants: [
     {
+     userid: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      required: true,
+      required: true
+     },
+     profilepic: {
+      type: String,
+      default:'https://res.cloudinary.com/dfmmmkwmk/image/upload/v1737535803/profilepick_ycnd6p.jpg'
+     }
     },
   ],
   messages: [

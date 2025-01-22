@@ -6,15 +6,6 @@ import Like from '../assets/like.svg';
 import commentss from '../assets/comment.svg';
 import pic from '../assets/profilepick.jpg';
 import Cookies from 'js-cookie';
-import first from '../assets/first.jpg';
-import second from '../assets/second.jpg';
-import third from '../assets/third.jpg';
-import fourth from '../assets/fourth.jpg';
-import fifth from '../assets/fifth.jpg';
-import sixth from '../assets/sixth.jpg';
-import seventh from '../assets/seventh.jpg';
-import eigth from '../assets/first.jpg';
-import gojo from '../assets/gojo.jpg';
 
 const Showcase = () => {
 
@@ -187,25 +178,12 @@ const Showcase = () => {
         <div className="show">
            <div className='self-data'> 
             <div className="self-info">
-                {/* <div className="recommendation-head">Mutual connection</div>
-                <div className="recommend">
-                    <div className="rec-user">Alice</div>
-                    <div className="rec-user">Alice</div>
-                    <div className="rec-user">Alice</div>
-                    <div className="rec-user">Alice</div>
-                    <div className="rec-user">Alice</div>
-                    <div className="rec-user">Alice</div>
-                    <div className="rec-user">Alice</div>
-                    <div className="rec-user">Alice</div>
-                    <div className="rec-user">Alice</div>
-                    <div className="rec-user">Alice</div>
-                </div> */}
                 <div className='nfollower'>
                     <div><strong>{Cookies.get('followers')}</strong></div>
                     <div>Followers</div>
                 </div>
                 <div className='profileimg'>
-                    <img id='pimg' src={gojo} alt='My Profile'></img>
+                    <img id='pimg' src={Cookies.get('profile')} alt='My Profile'></img>
                 </div>
                 <div className='nfollowing'>
                 <div><strong>{Cookies.get('following')}</strong></div>
@@ -240,7 +218,7 @@ const Showcase = () => {
                     <>
                     <div className="profile-post" key={index}>
                        <div className="image-user">
-                        <div className="post-profile-img"><img src={seventh} alt="profilepic"></img></div>
+                        <div className="post-profile-img"><img src={post.profilepic} alt="profilepic"></img></div>
                        <div className="profile-name">{users.usernames[index]}</div>
                        </div>
                         
@@ -288,7 +266,7 @@ const Showcase = () => {
                                 com.map((comment, idx) => (
                                     <div className="top-comment" key={idx}>
                                         <div className='user-com-head'>
-                                          <div className='compic'><img src={pic} alt='pick'></img> </div>
+                                          <div className='compic'><img src={comment.profilepic} alt='pick'></img> </div>
                                         <div className="top-profile">{comusers.usernames[idx] || 'Anonymous'}
                                             <button id='reply-visible' onClick={ async () => await handlereply(comment._id)}>replies</button>
                                         </div>
@@ -301,6 +279,7 @@ const Showcase = () => {
                                 {replies.length > 0 ? (
                                     replies.map((reply, index) => (
                                         <div key={index} className="reply-detail">
+                                            <div className="replypic"><img src={reply.profilepic} alt='profilepic'></img></div>
                                             <div className="reply-head">{replyusers.usernames[index]}</div>
                                             <div className="reply-mssg">{reply.text}</div>
                                         </div>

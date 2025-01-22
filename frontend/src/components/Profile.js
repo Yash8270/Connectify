@@ -6,7 +6,7 @@ import Connect_Context from '../context/Connectcontext';
 import Like from '../assets/like.svg';
 import commentss from '../assets/comment.svg';
 import activity_img from '../assets/activity.png';
-import gojo from '../assets/gojo.jpg';
+import Cookies from 'js-cookie';
 
 const Profile = () => {
 
@@ -133,7 +133,7 @@ const Profile = () => {
         <div className='profile-container'>
           <div className='profile-detail'>
             <div className='profile-image'>
-                <img  id='profileimg' src={gojo} alt='profile-pick'></img>
+                <img  id='profileimg' src={Cookies.get('profile')} alt='profile-pick'></img>
             </div>
                 <div className='profile-user'>{profile.usernames[0]}</div>
                 <div className='bio'>Passionate Web developer</div>
@@ -197,7 +197,7 @@ const Profile = () => {
                                 com.map((comment, idx) => (
                                     <div className="profile-comment" key={idx}>
                                         <div className='profile-user-com-head'>
-                                      <div className='compic'><img src={profilepick} alt='pick'></img> </div>
+                                      <div className='compic'><img src={comment.profilepic} alt='pick'></img> </div>
                                         <div className="profile-top-profile">{comusers.usernames[idx] || 'Anonymous'}
                                             <button id='reply-visible' onClick={ async () => await handlereply(comment._id)}>replies</button>
                                         </div>
@@ -210,6 +210,7 @@ const Profile = () => {
                                 {replies.length > 0 ? (
                                     replies.map((reply, index) => (
                                         <div key={index} className="reply-detail">
+                                            <div className="replypic"><img src={reply.profilepic} alt='profilepic'></img></div>
                                             <div className="reply-head">{replyusers.usernames[index]}</div>
                                             <div className="reply-mssg">{reply.text}</div>
                                         </div>

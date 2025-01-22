@@ -31,11 +31,12 @@ const UserSchema = new Schema({
 
     profilepic: {
         type: String,
-        default: ' '
+        default:'https://res.cloudinary.com/dfmmmkwmk/image/upload/v1737535803/profilepick_ycnd6p.jpg'
     },
 
     bio: {
-
+        type: String,
+        default: 'User'
     },
 
     skills: [ {

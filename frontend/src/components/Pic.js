@@ -134,12 +134,17 @@ const Pic = ({ show, setShow, signdata }) => {
               {/* Buttons */}
               {image ? (
                 <button id="cloudbtn" onClick={handlePost} disabled={uploading}>
-                  {uploading ? 'Posting...' : 'Post'}
+                  {uploading ? 'Signing-in...' : 'Sign-in'}
                 </button>
               ) : (
+                <>
                 <button id="uploadbtn" onClick={handleButtonClick}>
                   Upload from your Computer
                 </button>
+                {!image ? (<button id="cloudbtn" onClick={handlePost} disabled={uploading}>
+                  {uploading ? 'Signing-in...' : 'Sign-in'}
+                </button>):(<></>)}
+                </>
               )}
             </div>
           </div>

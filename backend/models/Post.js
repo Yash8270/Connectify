@@ -8,6 +8,12 @@ const PostSchema = new Schema({
         ref: 'User'
     },
 
+    profilepic : {
+        type: String,
+        default:'https://res.cloudinary.com/dfmmmkwmk/image/upload/v1737535803/profilepick_ycnd6p.jpg'
+
+    },
+
     description: {
         type: String,
         required: true
@@ -37,6 +43,10 @@ const PostSchema = new Schema({
                 ref: 'User',
                 required: true
             },
+            profilepic: {
+                type: String,
+                default:'https://res.cloudinary.com/dfmmmkwmk/image/upload/v1737535803/profilepick_ycnd6p.jpg'
+            },
             text: {
                 type: String,
                 required: true
@@ -51,6 +61,10 @@ const PostSchema = new Schema({
                         type: mongoose.Schema.Types.ObjectId,
                         ref: 'User', 
                         required: true
+                    },
+                    profilepic: {
+                        type: String,
+                        default:'https://res.cloudinary.com/dfmmmkwmk/image/upload/v1737535803/profilepick_ycnd6p.jpg'
                     },
                     text: {
                         type: String,

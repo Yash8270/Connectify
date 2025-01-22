@@ -29,12 +29,14 @@ const upload = multer({ storage });
 
 router.post('/postpic', fetchuser, upload.single('image'), async (req, res) => {
     try {
+        const userdata = await User.findById(req.user.id);
         const {description} = req.body;
         // console.log(req.body);
         // console.log(req.file);
         const imageUrl = req.file.path; // Cloudinary URL
 
         const postdata = await Post.create({
+            profilepic: userdata.profilepic,
             description: description,
             image: imageUrl,
             userid: req.user.id
@@ -210,6 +212,7 @@ router.patch('/comment/:id', fetchuser, async (req, res) => {
         const authid = req.user.id;
         const postid = req.params.id;
         const {text} = req.body;
+        const userdata = await User.findById(req.user.id);
 
         let findpost = await Post.findById(postid);
 
@@ -221,6 +224,7 @@ router.patch('/comment/:id', fetchuser, async (req, res) => {
             postid,
             {$push: {comments: {
                 userid: authid,
+                profilepic: userdata.profilepic,
                 text: text,
             },
         },
@@ -243,7 +247,7 @@ router.get('/getcomment/:id', fetchuser, async (req, res) => {
         const comment = await Post.findById(postid).select('comments');
 
         if(!comment) {
-            return res.status(400).json({error: 'No post is  found'});
+            return res.status(400).json({error: 'No post is found'});
         }
 
         const sortcomment = comment.comments.map((comments) => comments);
@@ -260,6 +264,7 @@ router.patch('/reply/:id', fetchuser, async (req, res) => {
     try {
         const authid = req.user.id;
         const comment_id = req.params.id;
+        const userdata = await User.findById(req.user.id);
 
         const {text} = req.body;
 
@@ -278,7 +283,8 @@ router.patch('/reply/:id', fetchuser, async (req, res) => {
         $push: {
             'comments.$.replies': { 
                 text: text, 
-                userid: authid
+                userid: authid,
+                profilepic: userdata.profilepic
             }
         }
     },

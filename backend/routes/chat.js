@@ -12,21 +12,30 @@ router.post('/newchat/:id', fetchuser, async (req, res) => {
         const recid = req.params.id;
         const sendid = req.user.id;
         const {mssg} = req.body;
-
+        const userdata = await User.findById(req.user.id);
+        const recdata = await User.findById(req.params.id);
         const connection = await User.findOne({_id: sendid, following: recid});
 
         if(!connection) {
             return res.status(400).json({message: "You don't follow this particular account"});
         }
 
-        const chatcheck = await Chat.findOne({participants: {$all: [sendid, recid]}});
+        const chatcheck = await Chat.findOne({
+            $and: [
+              { "participants.userid": sendid },
+              { "participants.userid": recid }
+            ]
+          });
 
         if(chatcheck) {
             return res.status(400).send('You already had chitchat with each other');
         }
 
         const newchat = await Chat.create({
-            participants: [sendid,recid],
+            participants: [
+                { userid: sendid, profilepic: userdata.profilepic },
+                { userid: recid, profilepic: recdata.profilepic }
+              ],
             messages: [{
                 sender: sendid,
                 text: mssg
@@ -48,14 +57,23 @@ router.patch('/updatechat/:id', fetchuser, async (req, res) => {
         const sendid = req.user.id;
         const recid = req.params.id;
 
-        const chatcheck = await Chat.findOne({participants: {$all: [sendid, recid]}});
+        const chatcheck = await Chat.findOne({
+            $and: [
+              { "participants.userid": sendid },
+              { "participants.userid": recid }
+            ]
+          });
 
         if(!chatcheck) {
             return res.status(200).send("You don't have any old conversation");
         }
 
         const updation = await Chat.findOneAndUpdate(
-            {participants:{$all:[sendid, recid]}},
+            {participants:{
+                $and:[{ "participants.userid": sendid },
+                { "participants.userid": recid }
+            ]}
+        },
             {$push: {messages: [{sender: sendid, text: req.body.mssg}]}},
             {new: true}
         );
@@ -73,7 +91,12 @@ router.get('/getchat/:id', fetchuser, async (req, res) => {
         const sendid = req.user.id;
         const recid = req.params.id;
 
-        const findchat = await Chat.findOne({participants: {$all: [sendid, recid]}});
+        const findchat = await Chat.findOne({
+            $and: [
+              { "participants.userid": sendid },
+              { "participants.userid": recid }
+            ]
+          });
 
         if(!findchat) {
             return res.status(200).send("There are no chats");
@@ -92,7 +115,12 @@ router.patch('/chatseen/:id', fetchuser, async (req, res) => {
         const sendid = req.user.id;
         const recid = req.params.id;
  
-        const findchat = await Chat.findOne({participants: {$all: [sendid, recid]}});
+        const findchat = await Chat.findOne({
+            $and: [
+              { "participants.userid": sendid },
+              { "participants.userid": recid }
+            ]
+          });
 
         if(!findchat) {
             return res.status(200).send("There are no chats");
@@ -131,7 +159,12 @@ router.delete('/delchat/:id', fetchuser, async (req, res) => {
         const sendid = req.user.id;
         const recid = req.params.id;
 
-        const findchat = await Chat.findOne({participants: {$all: [sendid, recid]}});
+        const findchat = await Chat.findOne({
+            $and: [
+              { "participants.userid": sendid },
+              { "participants.userid": recid }
+            ]
+          });
 
         if(!findchat) {
             return res.status(200).send("Chat doesn't exists");
@@ -172,13 +205,13 @@ router.get('/chatuser', fetchuser, async (req, res) => {
     try {
         const authid = req.user.id;
 
-        const chats = await Chat.find({ participants: authid }).sort({ 'messages.timestamp': -1 });
+        const chats = await Chat.find({ participants:{userid: authid }}).sort({ 'messages.timestamp': -1 });
 
         if(!chats) {
             return res.status(400).send({error: 'Chats not found with your id'});
         }
 
-        const participant_list = chats.map((chat) => chat.participants.filter((participant) => participant.toString() !== authid));
+        const participant_list = chats.map((chat) => chat.participants.filter((participant) => participant.userid.toString() !== authid));
         const uniqueParticipants = [...new Set(participant_list.flat().map((p) => p.toString()))];
         return res.status(200).json(uniqueParticipants);
         
@@ -195,7 +228,7 @@ router.get('/unseen', fetchuser, async(req, res) => {
         const authid = req.user.id;
 
         const chats = await Chat.find({
-            participants: authid, // The user is a participant
+            participants: {userid:authid}, // The user is a participant
             messages: {
               $elemMatch: {
                 "seen.status": false, // At least one message is unseen

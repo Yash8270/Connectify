@@ -5,6 +5,8 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const fetchuser = require('../middleware/fetchuser');
 
+const default_pic = 'https://res.cloudinary.com/dfmmmkwmk/image/upload/v1737535803/profilepick_ycnd6p.jpg';
+
 const JWT_SECRET = process.env.JWT_SECRET;
 
 require('dotenv').config();
@@ -49,9 +51,7 @@ router.post("/signin", upload.single('profilepic'), async (req, res) => {
     if(req.file.path) {
        imageUrl = req.file.path;
     }
-    else {
-      imageUrl='heloooo'; 
-    }
+  
     console.log(username);
     
     let user_email = await User.findOne({ email: req.body.email });
@@ -86,7 +86,7 @@ router.post("/signin", upload.single('profilepic'), async (req, res) => {
 
     const jwtData = jwt.sign(user_id, JWT_SECRET);
     console.log(jwtData);
-    res.status(200).json({ authtoken: jwtData , userid: user_id.user.id, user_detail: new_user});
+    res.status(200).json({ authtoken: jwtData , userid: user_id.user.id, user_detail: new_user, profilepic: imageUrl});
   } catch (error) {
     console.log(error.message);
     const { username, email, password, bio, skill } = req.body;
@@ -96,7 +96,6 @@ router.post("/signin", upload.single('profilepic'), async (req, res) => {
     //    imageUrl = req.file.path;
     // }
     // else {
-      imageUrl='heloooo'; 
     // }
     console.log(username);
     
@@ -119,7 +118,6 @@ router.post("/signin", upload.single('profilepic'), async (req, res) => {
       username: req.body.username,
       email: req.body.email,
       password: secPass,
-      profilepic: imageUrl,
       bio: req.body.bio,
       skills: skillsArray
     });
@@ -132,7 +130,7 @@ router.post("/signin", upload.single('profilepic'), async (req, res) => {
 
     const jwtData = jwt.sign(user_id, JWT_SECRET);
     console.log(jwtData);
-    res.status(200).json({ authtoken: jwtData , userid: user_name.id, user_detail: new_user});
+    res.status(200).json({ authtoken: jwtData , userid: user_name.id, user_detail: new_user, profilepic: default_pic});
     // return res.status(500).send("Internal server error");
   } 
 });

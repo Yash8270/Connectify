@@ -118,6 +118,13 @@ const Api = (props) => {
             secure: true,
             sameSite:'None'
         });
+
+        Cookies.set('profile', json.user_detail.profilepic, {
+            expires: 1,
+            secure: true,
+            sameSite:'None'
+        });
+
         return json;
         // alert('Successfully Sign-In');
     }
@@ -167,6 +174,12 @@ const Api = (props) => {
         });
 
         Cookies.set('following', json.user_detail.following.length, {
+            expires: 1,
+            secure: true,
+            sameSite:'None'
+        });
+
+        Cookies.set('profile', json.user_detail.profilepic, {
             expires: 1,
             secure: true,
             sameSite:'None'
@@ -328,7 +341,7 @@ const Api = (props) => {
     return json;
    }
 
-   //get usernames of chats
+   //get usernames and profilepics of chats
    const userchat = async (auth_token) => {
     const response = await fetch(`${host}/api/chat/chatuser`, {
         method:'GET',
