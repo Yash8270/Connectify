@@ -2,86 +2,81 @@ const express = require('express');
 const router = express.Router();
 const fetchuser = require('../middleware/fetchuser');
 const User = require('../models/User');
-const Post = require('../models/Post');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
 const Chat = require('../models/Chat');
 
 router.post('/newchat/:id', fetchuser, async (req, res) => {
     try {
         const recid = req.params.id;
         const sendid = req.user.id;
-        const {mssg} = req.body;
-        const userdata = await User.findById(req.user.id);
-        const recdata = await User.findById(req.params.id);
-        const connection = await User.findOne({_id: sendid, following: recid});
+        const { mssg } = req.body;
 
-        if(!connection) {
-            return res.status(400).json({message: "You don't follow this particular account"});
+        const userdata = await User.findById(sendid);
+        const recdata = await User.findById(recid);
+        const connection = await User.findOne({ _id: sendid, following: recid });
+
+        if (!connection) {
+            return res.status(400).json({ message: "You don't follow this account" });
         }
 
         const chatcheck = await Chat.findOne({
-            $and: [
-              { "participants.userid": sendid },
-              { "participants.userid": recid }
-            ]
-          });
+            participants: { $all: [{ $elemMatch: { userid: sendid } }, { $elemMatch: { userid: recid } }] }
+        });
 
-        if(chatcheck) {
-            return res.status(400).send('You already had chitchat with each other');
+        if (chatcheck) {
+            return res.status(400).send('You already have a chat');
         }
 
         const newchat = await Chat.create({
             participants: [
                 { userid: sendid, profilepic: userdata.profilepic },
                 { userid: recid, profilepic: recdata.profilepic }
-              ],
+            ],
             messages: [{
                 sender: sendid,
-                text: mssg
+                text: mssg,
+                timestamp: new Date()
             }]
         });
 
         return res.status(200).json(newchat);
 
-    } catch(error) {
-        console.log("/newchat/:id",error.message);
+    } catch (error) {
+        console.log("/newchat/:id", error.message);
         return res.status(500).send('Internal server error');
     }
 });
 
-
 router.patch('/updatechat/:id', fetchuser, async (req, res) => {
     try {
-
         const sendid = req.user.id;
         const recid = req.params.id;
 
         const chatcheck = await Chat.findOne({
-            $and: [
-              { "participants.userid": sendid },
-              { "participants.userid": recid }
-            ]
-          });
+            participants: { $all: [{ $elemMatch: { userid: sendid } }, { $elemMatch: { userid: recid } }] }
+        });
 
-        if(!chatcheck) {
-            return res.status(200).send("You don't have any old conversation");
+        if (!chatcheck) {
+            return res.status(200).send("You don't have any previous conversation");
         }
 
         const updation = await Chat.findOneAndUpdate(
-            {participants:{
-                $and:[{ "participants.userid": sendid },
-                { "participants.userid": recid }
-            ]}
-        },
-            {$push: {messages: [{sender: sendid, text: req.body.mssg}]}},
-            {new: true}
+            { participants: { $all: [{ $elemMatch: { userid: sendid } }, { $elemMatch: { userid: recid } }] } },
+            {
+                $push: {
+                    messages: {
+                        sender: sendid,
+                        text: req.body.mssg,
+                        timestamp: new Date()
+                    }
+                }
+            },
+            { new: true }
         );
 
-       return  res.status(200).json(updation);
+        return res.status(200).json(updation);
 
-    } catch(error) {
-        console.log("updatechat/:id",error.message);
+    } catch (error) {
+        console.log("updatechat/:id", error.message);
         return res.status(500).send('Internal server error');
     }
 });
@@ -92,19 +87,16 @@ router.get('/getchat/:id', fetchuser, async (req, res) => {
         const recid = req.params.id;
 
         const findchat = await Chat.findOne({
-            $and: [
-              { "participants.userid": sendid },
-              { "participants.userid": recid }
-            ]
-          });
+            participants: { $all: [{ $elemMatch: { userid: sendid } }, { $elemMatch: { userid: recid } }] }
+        });
 
-        if(!findchat) {
-            return res.status(200).send("There are no chats");
+        if (!findchat) {
+            return res.status(200).send("No chats found");
         }
 
         return res.status(200).json(findchat);
 
-    } catch(error) {
+    } catch (error) {
         console.log(error.message);
         return res.status(500).send('Internal server error');
     }
@@ -114,41 +106,26 @@ router.patch('/chatseen/:id', fetchuser, async (req, res) => {
     try {
         const sendid = req.user.id;
         const recid = req.params.id;
- 
+
         const findchat = await Chat.findOne({
-            $and: [
-              { "participants.userid": sendid },
-              { "participants.userid": recid }
-            ]
-          });
+            participants: { $all: [{ $elemMatch: { userid: sendid } }, { $elemMatch: { userid: recid } }] }
+        });
 
-        if(!findchat) {
-            return res.status(200).send("There are no chats");
+        if (!findchat) {
+            return res.status(200).send("No chats found");
         }
 
-        const lastMessage = findchat.messages[findchat.messages.length - 1];
+        findchat.messages.forEach((message) => {
+            if (!message.seen.status) {
+                message.seen.status = true;
+                message.seen.duration = req.body.stamp || new Date();
+            }
+        });
 
-    if (!lastMessage) {
-      return res.status(204).json({ error: 'No messages found in this chat' });
-    }
+        await findchat.save();
+        res.status(200).json({ success: true, message: 'Messages marked as seen' });
 
-    if(lastMessage.seen.status) {
-        return res.status(200).json({message:'Already seen'});
-    }
-
-    findchat.messages.forEach((message) => {
-        if (!message.seen.status) { // Only update unseen messages
-            message.seen.status = true;
-            message.seen.duration = req.body.stamp; // Use provided stamp or current time
-        }
-    });
-    await findchat.save();
-
-    console.log("Chats are in a seen zone");
-    res.status(200).json({ success: true, message: 'Last message marked as seen' });
-
-
-    } catch(error) {
+    } catch (error) {
         console.log(error.message);
         return res.status(500).send('Internal server error');
     }
@@ -160,102 +137,68 @@ router.delete('/delchat/:id', fetchuser, async (req, res) => {
         const recid = req.params.id;
 
         const findchat = await Chat.findOne({
-            $and: [
-              { "participants.userid": sendid },
-              { "participants.userid": recid }
-            ]
-          });
+            participants: { $all: [{ $elemMatch: { userid: sendid } }, { $elemMatch: { userid: recid } }] }
+        });
 
-        if(!findchat) {
-            return res.status(200).send("Chat doesn't exists");
+        if (!findchat) {
+            return res.status(200).send("Chat does not exist");
         }
 
-        const del = await Chat.findOneAndDelete(
-            {participants: {$all: [sendid, recid]}}
-        );
-        
-        // console.log(del);
-        return res.status(200).json({success: true, message:'Deleted successfully'});
-        
-    } catch(error) {
-        console.log(error.message);
-        return res.status(500).send('Internal server error');
-    }
-});
+        await Chat.findOneAndDelete({
+            participants: { $all: [{ $elemMatch: { userid: sendid } }, { $elemMatch: { userid: recid } }] }
+        });
 
-router.patch('/delmssg/:id', fetchuser, async (req, res) => {
-    try {
-        const mssgid = req.params.id;
+        return res.status(200).json({ success: true, message: 'Deleted successfully' });
 
-        const updatedChat = await Chat.findOneAndUpdate(
-            { "messages._id": mssgid }, // Find the chat containing the message
-            { $pull: { messages: { _id: mssgid } } }, // Remove the message
-            { new: true } // Return the updated document
-          );
-
-       res.status(200).json(updatedChat);   
-
-    } catch(error) {
+    } catch (error) {
         console.log(error.message);
         return res.status(500).send('Internal server error');
     }
 });
 
 router.get("/chatuser", fetchuser, async (req, res) => {
-  try {
-    const authid = req.user.id;
-    console.log(authid);
+    try {
+        const authid = req.user.id;
 
-    const chats = await Chat.find({ 
-        participants: { $elemMatch: { userid: authid } } 
-    }).sort({ 'messages.timestamp': -1 });
+        const chats = await Chat.find({ participants: { $elemMatch: { userid: authid } } })
+            .sort({ 'messages.timestamp': -1 });
 
-    if (!chats) {
-      return res.status(400).send({ error: "Chats not found with your id" });
+        if (!chats.length) {
+            return res.status(400).send({ error: "No chats found" });
+        }
+
+        const uniqueParticipants = [...new Map(
+            chats.flatMap(chat => chat.participants.filter(p => p.userid.toString() !== authid))
+                .map(p => [p.userid, p])
+        ).values()];
+
+        return res.status(200).json(uniqueParticipants);
+    } catch (error) {
+        console.log(error.message);
+        res.status(500).send("Internal server error");
     }
-    console.log("CHATS", chats);
-
-    // Extract participants excluding the current user
-    const participantList = chats.flatMap((chat) =>
-      chat.participants.filter(
-        (participant) => participant.userid.toString() !== authid
-      )
-    );
-
-    // Extract unique participant user IDs
-    const uniqueParticipants = [
-      ...new Map(participantList.map((p) => [p.userid, p])).values(),
-    ];
-    console.log("PARTICIPANTS: ",uniqueParticipants[0].userid);
-    return res.status(200).json(uniqueParticipants);
-  } catch (error) {
-    console.log(error.message);
-    res.status(500).send("Internal server error");
-  }
 });
 
-
-router.get('/unseen', fetchuser, async(req, res) => {
+router.get('/unseen', fetchuser, async (req, res) => {
     try {
         const authid = req.user.id;
 
         const chats = await Chat.find({
-            participants: {userid:authid}, // The user is a participant
+            participants: { $elemMatch: { userid: authid } },
             messages: {
-              $elemMatch: {
-                "seen.status": false, // At least one message is unseen
-                sender: { $ne: authid }, // Message was not sent by the user
-              },
-            },
-          });
+                $elemMatch: {
+                    "seen.status": false,
+                    sender: { $ne: authid }
+                }
+            }
+        });
 
-          res.status(200).json(chats.length);
+        res.status(200).json({ unseenCount: chats.length });
 
-    } catch(error) {
+    } catch (error) {
         console.log(error.message);
         return res.status(500).send('Internal server error');
     }
 });
-
 
 module.exports = router;

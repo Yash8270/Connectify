@@ -44,16 +44,14 @@ useEffect(() => {
 
 useEffect(() => {
 
-  const badgeupdate = async () => {
-    const l = await notification();
-    console.log(l);
-    setnchat(l);
-  }
-
-  badgeupdate();
+ notification();
+ console.log("NOTIFICATION");
+ console.log(nchat);
   
   socket.on('notif', async (data) => {
     console.log('NOTIFICATION');
+    const l = await notification();
+    console.log("UNSEEN CHAT: ", l);
   });
 
   return () => {

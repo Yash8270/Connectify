@@ -514,7 +514,7 @@ const Api = (props) => {
         credentials:'include'
     });
     const json = await response.json();
-    // setnchat(json);
+    setnchat(json.unseenCount);
     return json;
 };
 
