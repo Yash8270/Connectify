@@ -353,6 +353,7 @@ const Api = (props) => {
     });
 
     const json = await response.json();
+    console.log("USER CHAT NAMES: ", json);
     return json;
    }
 

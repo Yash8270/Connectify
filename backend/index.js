@@ -58,6 +58,10 @@ io.on('connection', (socket) => {
 
   // Handle private messages
   socket.on('privateMessage', ({ recipientId, message, senderId }) => {
+    console.log("RECEIVE SIDE: ",recipientId);
+    console.log("MESSAGE SENT: ",message);
+    console.log("SENDER SIDE: ",senderId);
+
     const recipientSocketId = users[recipientId];
     if (recipientSocketId) {
       // Send the message to the recipient

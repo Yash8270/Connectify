@@ -201,25 +201,37 @@ router.patch('/delmssg/:id', fetchuser, async (req, res) => {
     }
 });
 
-router.get('/chatuser', fetchuser, async (req, res) => {
-    try {
-        const authid = req.user.id;
+router.get("/chatuser", fetchuser, async (req, res) => {
+  try {
+    const authid = req.user.id;
+    console.log(authid);
 
-        const chats = await Chat.find({ participants:{userid: authid }}).sort({ 'messages.timestamp': -1 });
+    const chats = await Chat.find({ 
+        participants: { $elemMatch: { userid: authid } } 
+    }).sort({ 'messages.timestamp': -1 });
 
-        if(!chats) {
-            return res.status(400).send({error: 'Chats not found with your id'});
-        }
-
-        const participant_list = chats.map((chat) => chat.participants.filter((participant) => participant.userid.toString() !== authid));
-        const uniqueParticipants = [...new Set(participant_list.flat().map((p) => p.toString()))];
-        return res.status(200).json(uniqueParticipants);
-        
-
-    } catch(error) {
-        console.log(error.message);
-        res.status(500).send('Internal server error');
+    if (!chats) {
+      return res.status(400).send({ error: "Chats not found with your id" });
     }
+    console.log("CHATS", chats);
+
+    // Extract participants excluding the current user
+    const participantList = chats.flatMap((chat) =>
+      chat.participants.filter(
+        (participant) => participant.userid.toString() !== authid
+      )
+    );
+
+    // Extract unique participant user IDs
+    const uniqueParticipants = [
+      ...new Map(participantList.map((p) => [p.userid, p])).values(),
+    ];
+    console.log("PARTICIPANTS: ",uniqueParticipants[0].userid);
+    return res.status(200).json(uniqueParticipants);
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).send("Internal server error");
+  }
 });
 
 

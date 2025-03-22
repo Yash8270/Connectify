@@ -142,6 +142,7 @@ const Chat = () => {
             
         const user_chat = await userchat(authdata.authtoken);
         setparticipants(user_chat);
+        const only_ids = user_chat.map(user_chat => user_chat.userid);
         // console.log("USER CHAT NAMES:",user_chat);
         const usernames = await idtouser(user_chat);
         // console.log(usernames);
@@ -156,7 +157,7 @@ const Chat = () => {
 
     const handleChatfromSuggestion = async (names) => {
       const indice = users.usernames.indexOf(names);
-      const findid = participants[indice];
+      const findid = participants[indice].userid;
       // console.log("PARTICIPANT:",findid);
       handleChatonClick(findid);
     }
@@ -175,7 +176,7 @@ const Chat = () => {
     socket.emit('privateMessage', newMessage);
 
     if(participants.length > 0) {
-      // console.log("PARTICIPANTS", participants);
+      console.log("PARTICIPANTS", participants);
       const message = await chatting(id, authdata.authtoken, mssg.text);
     }
     else {
@@ -206,9 +207,11 @@ const Chat = () => {
 
       try {
         const user_chat = await userchat(authdata.authtoken);
+
         setparticipants(user_chat);
+        const only_ids = user_chat.map(user_chat => user_chat.userid);
         // console.log(user_chat);
-        const usernames = await idtouser(user_chat);
+        const usernames = await idtouser(only_ids);
         // console.log(usernames);
         setusers(usernames);
     } catch (error) {
@@ -241,7 +244,8 @@ const Chat = () => {
         const user_chat = await userchat(authdata.authtoken);
         setparticipants(user_chat);
         // console.log("USER CHAT NAMES:",user_chat);
-        const usernames = await idtouser(user_chat);
+        const only_ids = user_chat.map(user_chat => user_chat.userid);
+        const usernames = await idtouser(only_ids);
         // console.log(usernames);
         setusers(usernames);
         // console.log("User sent message");
@@ -335,8 +339,9 @@ if (durationInMinutes < 1) {
     const deletion = await delchat(uid);
     const user_chat = await userchat(authdata.authtoken);
     setparticipants(user_chat);
+    const only_ids = user_chat.map(user_chat => user_chat.userid);
     // console.log("USER CHAT NAMES:",user_chat);
-    const usernames = await idtouser(user_chat);
+    const usernames = await idtouser(only_ids);
     // console.log(usernames);
     setusers(usernames);
   } 
@@ -383,16 +388,16 @@ if (durationInMinutes < 1) {
               {users.usernames.map((username, index) => (
                 <div key={index} className="user-item">
                   {Cookies.get('username') === 'Gojo' ? <img src={seventh}></img>: <img src={gojo}></img>}
-                  <button id='userchatbtn' onClick={async () => await handleChatonClick(participants[index])}>{username}</button>
+                  <button id='userchatbtn' onClick={async () => await handleChatonClick(participants[index].userid)}>{username}</button>
 
                   
                 {/* Ellipsis menu */}
       <div className="chat-options">
-        <button className="ellipsis-button" onClick={() => toggleOptions(participants[index])}>
+        <button className="ellipsis-button" onClick={() => toggleOptions(participants[index].userid)}>
           &#x22EE; {/* Vertical Ellipsis */}
         </button>
 
-        {showOptions === participants[index] && (
+        {showOptions === participants[index].userid && (
           <div className="chat-dropdown">
             <button onClick={async ()=> await handleDeleteChat(participants[index])}>Delete</button>
             {/* Add more options here if needed */}
