@@ -144,7 +144,7 @@ const Chat = () => {
         setparticipants(user_chat);
         const only_ids = user_chat.map(user_chat => user_chat.userid);
         // console.log("USER CHAT NAMES:",user_chat);
-        const usernames = await idtouser(user_chat);
+        const usernames = await idtouser(only_ids);
         // console.log(usernames);
         setusers(usernames);
       });
