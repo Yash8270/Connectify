@@ -31,6 +31,14 @@ const Showcase = () => {
         only_followers } = context;
   
         const inputRef = useRef(null);
+        console.log(Cookies.get());
+        let skills = [];
+const userCookie = Cookies.get(); // Get all cookies
+
+if (userCookie && userCookie.skills) {
+    skills = userCookie.skills.split(','); // Convert string to array
+}
+        
 
     const handleClear = () => {
         if(inputRef.current) {
@@ -190,18 +198,18 @@ const Showcase = () => {
                     <div>Following</div>
                 </div>
                 <div className='username_profile'>{Cookies.get('username')}</div>
-                <div className='bio'>Hello, I am Full Stack Developer</div>
+                <div className='bio'>{Cookies.get('bio')}</div>
                 <div className='my-profile'><Link to={`/profile/${authdata.userid}`} style={{ textDecoration: 'none', color: 'inherit' }}>
                 My Profile</Link></div>
             </div>
              <div className='skills'>
                  <div className='skillhead'>Skills</div>
                  <div className='skill-detail'>
-                    <div>MERN Stack Developer</div>
-                    <div>Backend Developer</div>
-                    <div>Robotics</div>
-                    <div>Embedded C/C++</div>
-                    <div>Machine Learning</div>
+                 {skills.length > 0 ? (
+        skills.map((skill, index) => <div key={index}>{skill.trim()}</div>) // Trim spaces
+      ) : (
+        <div>No skills found</div>
+      )}
                  </div>
              </div>
             </div>

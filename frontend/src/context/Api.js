@@ -125,6 +125,18 @@ const Api = (props) => {
             sameSite:'None'
         });
 
+        Cookies.set('bio',json.user_detail.bio, {
+            expires:1,
+            secure: true,
+            sameSite:'None'
+        });
+
+        Cookies.set('skills', json.user_detail.skills, {
+            expires: 1,
+            secure: true,
+            sameSite:'None'
+        });
+
         return json;
         // alert('Successfully Sign-In');
     }
@@ -180,6 +192,18 @@ const Api = (props) => {
         });
 
         Cookies.set('profile', json.user_detail.profilepic, {
+            expires: 1,
+            secure: true,
+            sameSite:'None'
+        });
+
+        Cookies.set('bio',json.user_detail.bio, {
+            expires:1,
+            secure: true,
+            sameSite:'None'
+        });
+
+        Cookies.set('skills', json.user_detail.skills, {
             expires: 1,
             secure: true,
             sameSite:'None'

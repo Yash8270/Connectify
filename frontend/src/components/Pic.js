@@ -40,11 +40,9 @@ const Pic = ({ show, setShow, signdata }) => {
     fileInputRef.current.click(); // Trigger hidden file input click
   };
 
-  // Upload image to Cloudinary
   const handlePost = async () => {
     let result;
     const formData = new FormData();
-    // formData.append('description', desc.text);
     formData.append('username', signdata.username);
     formData.append('email', signdata.email);
     formData.append('password', signdata.password);
@@ -54,28 +52,30 @@ const Pic = ({ show, setShow, signdata }) => {
 
     setUploading(true);
     try {
-      // const result = await cloudimage(formData, authdata.authtoken); // Upload function
-       result = await signin(formData);
-       console.log(result);
-      if (result.success) {
-        alert('Successfully signin');
+        result = await signin(formData);
+        console.log(result);
 
-        handleModal(); // Close modal after successful upload
+        if (result && result.success) {
+            alert('Successfully signed in');
+            handleModal(); // Close modal after successful upload
+        } 
+            alert('Successfully signed in');
         
-        
-      } else {
-        alert('failed');
-      }
     } catch (error) {
-      console.error('Error uploading:', error);
-      // alert('There was an error uploading the image.');
+        console.error('Error uploading:', error);
     } finally {
-      setUploading(false);
-      console.log(skill);
-      navigate(`/showcase/${result.userid}`);
+        setUploading(false);
+        console.log(skill);
 
+        // Check if result is defined before using it
+        if (result && result.userid) {
+            navigate(`/showcase/${result.userid}`);
+        } else {
+            console.warn("Result is undefined or missing userid.");
+        }
     }
-  };
+};
+
 
   const updateskill = (index, value) => {
     const newskill = [...skill];

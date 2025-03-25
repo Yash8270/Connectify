@@ -62,20 +62,27 @@ useEffect(() => {
 
 //  console.log(followname);
 //  console.log("no. of requests:",nfollow);
-  const handleInputChange = (e) => {
-    const input = e.target.value;
-    setQuery(input);
+const handleInputChange = (e) => {
+  const input = e.target.value;
+  setQuery(input);
 
-    if (input) {
-      const filteredSuggestions = searchuser.filter((user) =>
-        user.username.toLowerCase().includes(input.toLowerCase()) // Case-insensitive match
-      );
-      setSuggestions(filteredSuggestions);
-      // console.log("SUGGESTIONS ",suggestions);
-    } else {
+  if (input) {
+      setTimeout(() => {
+          if (Array.isArray(searchuser)) { // Ensure searchuser is an array
+              const filteredSuggestions = searchuser.filter((user) =>
+                  user.username?.toLowerCase().includes(input.toLowerCase())
+              );
+              setSuggestions(filteredSuggestions);
+          } else {
+              setSuggestions([]);
+              console.warn("searchuser is not an array:", searchuser);
+          }
+      }, 500); // Delay filtering by 500ms
+  } else {
       setSuggestions([]);
-    }
-  };
+  }
+};
+
 
   const handleUserClick = (user) => {
     setQuery(''); // Set the input value to the clicked username
