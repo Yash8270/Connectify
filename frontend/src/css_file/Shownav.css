@@ -1,139 +1,96 @@
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
-  
-  .show-container {
-    /* background-color: #072371; */
-    background-color: #1A1A1A;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center; 
-    justify-content: space-between; 
-    padding: 1rem 2rem;
-    color: white;
-    position: fixed; /* Fix navbar at the top */
-    top: 0; /* Ensures it sticks to the top */
-    width: 100%; /* Make it span the full width */
-    z-index: 1000; /* Keep it above other elements */
-    /* box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); Optional: Add shadow for better visibility */
-    /* height: 12vh; */
-  }
-  
-  .show-container .showname {
-    font-size: 1.5vw;
-    font-weight: bold;
-    padding: 0.5rem 1rem;
-  }
+/* CSS Variables for consistency */
+:root {
+  --shownav-bg: #1A1A1A;
+  --shownav-text: white;
+  --shownav-brand: yellow;
+  --shownav-input-bg: #282828;
+  --sidebar-bg: #2c2c2c;
+  --transition-speed: 0.3s;
+}
 
-  
-  #searchuser {
-    font-size: 0.7em;
-    padding-left: 0.5em;
-    width: 18em;
-    height: 2.5em;
-    background-color: #282828;
-    /* color: #072371; */
-    color: white;
-    border-radius: 12px;
-    border-color: transparent;
-  }
-  
-  .show-container .center-nav {
-    display: flex;
-    flex-wrap: wrap;
-    font-size: 1.3vw;
-    gap: 2rem; 
-  }
-  
-  .show-container .center-nav div {
-    cursor: pointer;
-    padding: 0.5rem 1rem;
-    transition: background-color 0.3s;
-  }
-  
-  .show-container .profile {
-    padding: 0.5rem 1rem;
-    font-size: 1.2vw;
-    cursor: pointer;
-    border: 4px solid white;
-    border-radius: 24px;
-  }
-
-  /* .update,.chat,.post,.back {
-    border-radius: 24px;
-  } */
-
-  #requestimg, #chatimg {
-    width: 100%;
-    height: 100%;
-  }
-
-  #requestimg:hover, #chatimg:hover {
-    fill: yellow;
-  }
-
-  #navpostbtn {
-    font-size: 1.2vw;
-    width: 85%;
-    height: 100%;
-  }
-  
-  .update:hover, .chat:hover, .profile:hover,.post:hover,.back:hover {
-    /* background-color: #ffffffab; */
-      color: yellow;
-      font-weight: 550;
-      /* border-radius: 24px; */
-  }
-
-  
-
-
-
-  /* Suggestion List Container */
-.suggestion-list {
-  color: black;
-  position: absolute;
-  top: 2.5em;
+/* Main container for the navigation bar */
+.show-container {
+  background-color: var(--shownav-bg);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 2rem;
+  color: var(--shownav-text);
+  position: fixed;
+  top: 0;
   left: 0;
-  width: 13.5em;
-  /* background: #fff; */
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  list-style-type: none;
-  padding: 0;
-  margin: 0;
-  z-index: 10;
+  width: 100%;
+  z-index: 1000;
+  gap: 1.5rem;
 }
 
-.suggestion-list {
-  background-color: #1A1A1A;
+.show-container a {
+  color: inherit;
+  text-decoration: none;
 }
 
-/* Suggestion List Item */
-.suggestion-item {
-  padding: 8px;
-  border-bottom: 1px solid #eee;
+/* Welcome message */
+.showname {
+  font-size: 1.25rem;
+  font-weight: bold;
+  white-space: nowrap; /* Prevents name from wrapping */
+}
+
+/* Container for search and main icons */
+.center-nav-shownav {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-grow: 1; /* Allows this to take up available space */
+  justify-content: center;
+}
+
+#searchuser {
+  font-size: 1rem;
+  padding: 0.5rem 1rem;
+  width: 250px; /* Fixed but reasonable width */
+  background-color: var(--shownav-input-bg);
+  color: var(--shownav-text);
+  border-radius: 25px;
+  border: 1px solid transparent;
+  transition: border-color var(--transition-speed);
+}
+
+#searchuser:focus {
+  outline: none;
+  border-color: var(--shownav-brand);
+}
+
+/* Container for main icons (requests, chat) */
+.main-icons {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.icon-wrapper {
+  position: relative;
   cursor: pointer;
-  font-size: 0.85em;
+  width: 28px; /* Set a fixed size */
+  height: 28px;
+}
+.icon-wrapper img {
+  width: 100%;
+  height: 100%;
+  transition: transform var(--transition-speed);
+}
+.icon-wrapper:hover img {
+    transform: scale(1.1);
 }
 
-.suggestion-item:last-child {
-  border-bottom: none; /* Remove border for the last item */
-}
-
-.suggestion-item:hover {
-  background: rgb(137, 137, 137); /* Highlight on hover */
-}
-
+/* Badge for notifications */
 .badge {
-  position: relative;
-  top: -3em;
-  left: 3.2em;
-  background-color: yellow;
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background-color: var(--shownav-brand);
   color: black;
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: bold;
   border-radius: 50%;
   width: 20px;
@@ -144,21 +101,115 @@
   box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
 }
 
-.badge-update {
-  position: relative;
-  top: -4em;
-  left: 2em;
-  background-color: yellow;
-  color: black;
-  font-size: 12px;
-  font-weight: bold;
-  border-radius: 50%;
-  width: 20px;
-  height: 20px;
+
+/* --- Sidebar Navigation (Hidden on Desktop) --- */
+.sidebar-nav {
   display: flex;
   align-items: center;
-  justify-content: center;
-  box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+  gap: 1.5rem;
+}
+.sidebar-nav div {
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: color var(--transition-speed);
+}
+.sidebar-nav div:hover {
+  color: var(--shownav-brand);
+}
+.profile-sidebar {
+  padding: 0.5rem 1.5rem;
+  border: 2px solid var(--shownav-text);
+  border-radius: 50px;
+}
+.profile-sidebar:hover {
+    border-color: var(--shownav-brand);
+    background-color: rgba(255, 255, 0, 0.1);
+    color: var(--shownav-text); /* Override other hover */
 }
 
+
+/* Hamburger and Close Buttons - Hidden on Desktop */
+.hamburger-btn-shownav, .close-btn-shownav {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--shownav-text);
+  font-size: 2rem;
+  cursor: pointer;
+  z-index: 1001;
+}
+
+.overlay-shownav {
+  display: none;
+}
+
+
+/* --- Media Query for Responsiveness (screens smaller than 992px) --- */
+@media (max-width: 992px) {
+  .show-container {
+    padding: 1rem;
+    flex-wrap: wrap; /* Allow items to wrap */
+  }
+
+  .center-nav-shownav {
+    order: 3; /* Move search and icons to the next line */
+    width: 100%;
+    margin-top: 0.5rem;
+    justify-content: space-between;
+  }
+
+  #searchuser {
+      flex-grow: 1; /* Let search bar take available space */
+  }
   
+  /* Hide desktop sidebar items */
+  .sidebar-nav {
+    display: none;
+  }
+  
+  /* Show hamburger button */
+  .hamburger-btn-shownav {
+    display: block;
+  }
+  
+  /* Style the actual sidebar */
+  .sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 2rem;
+    position: fixed;
+    top: 0;
+    right: -100%;
+    width: 250px;
+    height: 100vh;
+    padding-top: 6rem;
+    background-color: var(--sidebar-bg);
+    box-shadow: -2px 0 5px rgba(0,0,0,0.5);
+    transition: right var(--transition-speed) ease-in-out;
+    z-index: 1000;
+  }
+  
+  .sidebar-nav.open {
+    right: 0;
+  }
+  
+  .close-btn-shownav {
+      display: block;
+      position: absolute;
+      top: 1rem;
+      right: 1.5rem;
+      font-size: 2.5rem;
+  }
+  
+  /* Show overlay when sidebar is open */
+  .overlay-shownav {
+      display: block;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 999;
+  }
+}

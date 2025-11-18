@@ -13,7 +13,7 @@ const result = dotenv.config();
 if (result.error) {
   console.error('Error loading .env file:', result.error);
 } else {
-  console.log('Loaded variables:', result.parsed);
+  // console.log('Loaded variables:', result.parsed);
 }
 
 const server = http.createServer(app);
@@ -43,7 +43,7 @@ app.use('/api/post', require('./routes/post'));
 app.use('/api/follow', require('./routes/follow'));
 app.use('/api/chat', require('./routes/chat')); 
 
-console.log("API_KEY:",process.env.CLOUDINARY_API_KEY);
+// console.log("API_KEY:",process.env.CLOUDINARY_API_KEY);
 
 const users = {}; // Map to store user IDs and their socket IDs
 

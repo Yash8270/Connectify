@@ -159,6 +159,7 @@ const Api = (props) => {
 
         const json = await response.json();
         setauthdata(json);
+        console.log(json);
         // setauthdata({authtoken: Cookies.get('auth-token'), userid: Cookies.get('userid')});
 
         Cookies.set('auth-token', json.authtoken, {

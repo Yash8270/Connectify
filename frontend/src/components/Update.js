@@ -1,77 +1,61 @@
-import React, { useContext, useEffect, useState } from 'react';
-import interaction from '../assets/interaction.svg';
-import '../css_file/Update.css';
-import Connect_Context from '../context/Connectcontext';
+import React from "react";
 
+const Update = ({ showreq, setshowreq, reqname }) => {
+  if (!showreq) return null;
 
-const Update = ({showreq, setshowreq, reqname, setreqname}) => {
+  const closeModal = () => setshowreq(false);
 
-    const context = useContext(Connect_Context);
-    const {authdata, followreq, setfollowreq, acceptreq, nfollow, idtouser, rejectreq} = context;
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+      {/* BACKDROP */}
+      <div
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade"
+        onClick={closeModal}
+      ></div>
 
+      {/* MODAL */}
+      <div className="relative bg-[#1a1a1a] rounded-xl w-[90%] max-w-md p-6 border border-white/10 shadow-2xl animate-scaleIn">
 
-    const handleAccept = async (id, name) => {
-        const addfollower = await acceptreq(id);
-        console.log(addfollower);
-        setreqname((prev) => ({
-            ...prev,
-            usernames: prev.usernames.filter((username) => username !== name)
-        }));
-    }
+        {/* CLOSE BUTTON */}
+        <button
+          onClick={closeModal}
+          className="absolute top-3 right-3 text-gray-300 text-xl hover:text-red-500"
+        >
+          ✕
+        </button>
 
-    const handleReject = async (id, name) => {
-        const rejectfollowreq = await rejectreq(id);
-        setreqname((prev) => ({
-            ...prev,
-            usernames: prev.usernames.filter((username) => username !== name)
-        }));
-        alert('Follow Request Rejected');
-    }
+        <div className="text-xl font-semibold mb-4 text-white">
+          Follow Requests
+        </div>
 
-    const handleModal = () => {
-        setshowreq((prevShow) => !prevShow);
-    }
+        <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+          {reqname?.usernames?.length > 0 ? (
+            reqname.usernames.map((u, idx) => (
+              <div
+                key={idx}
+                className="flex items-center justify-between pb-3 border-b border-white/10"
+              >
+                <span className="text-gray-200">{u}</span>
 
-    return(
-        <>
-      {showreq && (
-         <div className="modal-overlay-req">
-         <div className="modal-req">
-           <button className="modal-close-req" onClick={handleModal}>
-             &times;
-           </button>
-           <h2>Follow Requests</h2>
-           {nfollow === 0 ? (
-             <p>No follow requests.</p>
-           ) : (
-             <ul className="follow-requests-list">
-               {reqname.usernames.map((request, index) => (
-                 <li key={index} className="follow-request-item">
-                   <span>{request}</span>
-                   <div>
-                     <button
-                       className="accept-btn"
-                       onClick={async () => await handleAccept(followreq[index].from, request)}
-                     >
-                       Accept
-                     </button>
-                     <button
-                       className="reject-btn"
-                       onClick={async () => await handleReject(followreq[index].from, request)}
-                     >
-                       Reject
-                     </button>
-                   </div>
-                 </li>
-               ))}
-             </ul>
-           )}
-         </div>
-       </div>
-      )}  
-      
-        </>
-    );
-}
+                <div className="flex">
+                  <button className="bg-yellow-400 text-black px-3 py-1 rounded-l-md font-semibold hover:bg-yellow-300">
+                    Accept
+                  </button>
+                  <button className="bg-black text-white px-3 py-1 rounded-r-md border border-white/10 hover:bg-white/10">
+                    Reject
+                  </button>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="text-gray-400 text-center py-4">
+              No requests found
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default Update;

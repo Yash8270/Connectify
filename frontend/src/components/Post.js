@@ -1,119 +1,85 @@
-import React, { useContext, useState } from 'react';
-import '../css_file/Post.css';
-import Connect_Context from '../context/Connectcontext';
+import React, { useState } from "react";
 
 const Post = ({ show, setShow }) => {
-  const context = useContext(Connect_Context);
-  const { cloudimage, authdata } = context;
+  const [preview, setPreview] = useState(null);
+  const [desc, setDesc] = useState("");
+  const [file, setFile] = useState(null);
 
-  const [image, setImage] = useState(null); // State to store the image file
-  const [PostImage, setPostImage] = useState(null);
-  const [uploading, setUploading] = useState(false);
-  const fileInputRef = React.createRef(); // Ref for hidden file input
-  const [desc, setdesc] = useState({text:'New Post'});
+  if (!show) return null;
 
-  // Close modal
-  const handleModal = () => {
+  const closeModal = () => {
     setShow(false);
-    setImage(null);
-    setPostImage(null);
+    setPreview(null);
+    setDesc("");
+    setFile(null);
   };
 
-  // Handle file selection
-  const handleFileChange = (event) => {
-    const file = event.target.files[0];
-    setImage(file);
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPostImage(reader.result); // Set image preview
-      };
-      reader.readAsDataURL(file); // Read file as Data URL
-    }
+  const handleFile = (e) => {
+    const img = e.target.files[0];
+    setFile(img);
+    if (img) setPreview(URL.createObjectURL(img));
   };
 
-  const handleButtonClick = () => {
-    fileInputRef.current.click(); // Trigger hidden file input click
-  };
-
-  // Upload image to Cloudinary
-  const handlePost = async () => {
-    const formData = new FormData();
-    formData.append('description', desc.text);
-    formData.append('image', image); // Append the image
-
-    setUploading(true);
-    try {
-      const result = await cloudimage(formData, authdata.authtoken); // Upload function
-      console.log(result);
-
-      if (result.success) {
-        alert('Post uploaded');
-        handleModal(); // Close modal after successful upload
-      } else {
-        alert('Upload failed');
-      }
-    } catch (error) {
-      console.error('Error uploading:', error);
-      alert('There was an error uploading the image.');
-    } finally {
-      setUploading(false);
-    }
+  const handlePostClick = () => {
+    // 🔥 YOU WILL PUT YOUR ORIGINAL POST LOGIC HERE
+    console.log("Posting:", desc, file);
+    closeModal();
   };
 
   return (
-    <>
-      {show && (
-        <div className="modal-container">
-          {/* Modal Overlay */}
-          <div className="modal-overlay"></div>
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+      {/* BACKDROP */}
+      <div
+        onClick={closeModal}
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade opacity-100"
+      ></div>
 
-          {/* Modal Content */}
-          <div className="modal-content">
-            {/* Close Button */}
-            <button className="close-btn" onClick={handleModal}>
-              &times;
-            </button>
+      {/* MODAL */}
+      <div className="relative bg-[#1a1a1a] rounded-xl w-[90%] max-w-md p-6 border border-white/10 shadow-2xl animate-scaleIn">
 
-            {/* Post Description */}
-            <div className="modal-description">
-              <div className="description-label">Post Description:</div>
-              <input id="modaldesc" placeholder="Enter your thoughts for your post" onChange={(e) => setdesc({...desc, text: e.target.value})} />
-            </div>
+        {/* CLOSE BUTTON */}
+        <button
+          className="absolute top-3 right-3 text-gray-300 text-xl hover:text-red-500"
+          onClick={closeModal}
+        >
+          ✕
+        </button>
 
-            {/* Image Preview */}
-            <div className="modal-upload">
-              {image && (
-                <div className="image-preview">
-                  <img src={PostImage} alt="Uploaded Preview" />
-                </div>
-              )}
-              <div className="post-label">Upload your post</div>
+        <div className="text-xl font-semibold text-white mb-4">Create Post</div>
 
-              {/* Hidden File Input */}
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleFileChange}
-                accept="image/*"
-                style={{ display: 'none' }}
-              />
+        {/* DESCRIPTION */}
+        <label className="text-gray-300 text-sm">Description</label>
+        <textarea
+          className="w-full mt-1 mb-4 p-3 bg-[#242424] rounded-lg text-white border border-white/10 focus:ring-2 focus:ring-yellow-400 outline-none"
+          rows={3}
+          value={desc}
+          onChange={(e) => setDesc(e.target.value)}
+        />
 
-              {/* Buttons */}
-              {image ? (
-                <button id="cloudbtn" onClick={handlePost} disabled={uploading}>
-                  {uploading ? 'Posting...' : 'Post'}
-                </button>
-              ) : (
-                <button id="uploadbtn" onClick={handleButtonClick}>
-                  Upload from your Computer
-                </button>
-              )}
-            </div>
+        {/* IMAGE PREVIEW */}
+        {preview && (
+          <div className="w-full h-48 overflow-hidden rounded-lg border border-white/10 mb-4">
+            <img src={preview} alt="preview" className="w-full h-full object-contain" />
           </div>
-        </div>
-      )}
-    </>
+        )}
+
+        {/* UPLOAD */}
+        <label className="text-gray-300 text-sm mb-1 block">Upload Image</label>
+        <input
+          type="file"
+          onChange={handleFile}
+          className="text-gray-300 text-sm mb-4"
+        />
+
+        {/* POST BUTTON */}
+        <button
+          onClick={handlePostClick}
+          className="w-full bg-yellow-400 hover:bg-yellow-300 text-black font-semibold py-2 rounded-lg"
+        >
+          Post
+        </button>
+      </div>
+    </div>
   );
 };
 

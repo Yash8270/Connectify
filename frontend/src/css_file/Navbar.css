@@ -1,69 +1,174 @@
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  color: white;
+/* A good practice: define CSS variables for colors and transitions */
+:root {
+  --primary-bg: linear-gradient(270deg, #000000 12%, #4d4d4d 100%);
+  --brand-color: yellow;
+  --text-color: white;
+  --sidebar-bg: #2c2c2c;
+  --transition-speed: 0.3s;
 }
 
+/* General styles for the navbar */
 .nav-container {
-  /* background-color: #072371; */
-  background: linear-gradient(270deg, #000000 12%, #4d4d4d 100%);
+  background: var(--primary-bg);
   display: flex;
-  flex-wrap: wrap;
-  align-items: center; 
-  justify-content: space-between; 
+  align-items: center;
+  justify-content: space-between;
   padding: 1rem 2rem;
-  color: white;
-  position: fixed; /* Fix navbar at the top */
-  top: 0; /* Ensures it sticks to the top */
-  width: 100%; /* Make it span the full width */
-  z-index: 1000; /* Keep it above other elements */
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Optional: Add shadow for better visibility */
+  color: var(--text-color);
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
+/* Make links inherit color properly and remove default underline */
+.nav-container a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Brand name styling */
 .nav-container .name {
-  font-size: 2.5vw;
+  font-size: 1.75rem;
   font-weight: bold;
-  padding: 0.5rem 1rem;
-  color: yellow;
 }
 
+.nav-container .name a {
+   color: var(--brand-color);
+}
+
+
+/* Centered navigation links container */
 .nav-container .center-nav {
   display: flex;
-  flex-wrap: wrap;
-  font-size: 1.3vw;
-  gap: 2rem; 
+  align-items: center;
+  gap: 2rem;
 }
 
+/* Individual navigation link */
 .nav-container .center-nav div {
   cursor: pointer;
+  font-size: 1.1rem;
   padding: 0.5rem 1rem;
-  transition: background-color 0.3s;
+  transition: color var(--transition-speed) ease, transform var(--transition-speed) ease;
 }
 
+/* Login/Sign-in button for large screens */
 .nav-container .login-sign {
-  padding: 0.5rem 1rem;
-  font-size: 1.2vw;
+  padding: 0.5rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
   cursor: pointer;
-  border: 4px solid white;
-  border-radius: 24px;
+  border: 2px solid var(--text-color);
+  border-radius: 50px;
+  transition: background-color var(--transition-speed) ease, border-color var(--transition-speed) ease;
 }
 
-.home,.about,.contact {
-  position: relative;
-  /* border-radius: 24px; */
+/* Hide the mobile-specific login button on large screens */
+.login-sign-mobile {
+    display: none;
 }
 
-.home:hover, .about:hover, .contact:hover, .login-sign:hover {
-  /* background-color: #ffffffab;
-    color: #072371; */
-    color: yellow;
-    font-weight: 550;
-    /* border-radius: 24px; */
-    transform: translateY(-5px);
-    transition: transform 2s ease;
+/* Hover effects for links and button */
+.home:hover,
+.about:hover,
+.contact:hover {
+  color: var(--brand-color);
+  transform: translateY(-3px);
 }
 
 .login-sign:hover {
-  border-color: yellow;
+  border-color: var(--brand-color);
+  background-color: rgba(255, 255, 0, 0.1);
+}
+
+/* Hamburger and Close Buttons - initially hidden on large screens */
+.hamburger-btn, .close-btn {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text-color);
+  font-size: 2rem;
+  cursor: pointer;
+}
+
+/* Overlay for when sidebar is open - initially hidden */
+.overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 998; /* Below the sidebar but above everything else */
+}
+
+
+/* --- Media Query for Responsiveness (screens smaller than 768px) --- */
+@media (max-width: 768px) {
+  /* Hide the desktop navigation and login button */
+  .nav-container .center-nav {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 1.5rem;
+    position: fixed;
+    top: 0;
+    right: -100%; /* Start off-screen */
+    width: 250px;
+    height: 100vh;
+    padding-top: 5rem;
+    background-color: var(--sidebar-bg);
+    box-shadow: -2px 0 5px rgba(0,0,0,0.5);
+    transition: right var(--transition-speed) ease-in-out;
+    z-index: 999;
+  }
+  
+  /* The 'open' class will be added by React to show the sidebar */
+  .nav-container .center-nav.open {
+    right: 0;
+  }
+
+  /* Show the hamburger button */
+  .hamburger-btn {
+    display: block;
+  }
+
+  /* Show the close button inside the sidebar */
+  .close-btn {
+      display: block;
+      position: absolute;
+      top: 1rem;
+      right: 1.5rem;
+      font-size: 2.5rem;
+  }
+  
+  /* Hide the original login button and show the mobile one */
+  .login-sign {
+      display: none;
+  }
+  
+  .login-sign-mobile {
+      display: block;
+      margin-top: 2rem;
+      font-size: 1.2rem;
+      font-weight: bold;
+      padding: 0.75rem 2rem;
+      border: 2px solid var(--brand-color);
+      border-radius: 50px;
+  }
+  
+  .login-sign-mobile:hover {
+      background-color: var(--brand-color);
+      color: black;
+  }
+
+  /* Show the overlay when the sidebar is open */
+  .overlay {
+      display: block;
+  }
 }

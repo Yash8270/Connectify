@@ -5,7 +5,6 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const fetchuser = require('../middleware/fetchuser');
 
-const default_pic = 'https://res.cloudinary.com/dfmmmkwmk/image/upload/v1737535803/profilepick_ycnd6p.jpg';
 
 const JWT_SECRET = process.env.JWT_SECRET;
 

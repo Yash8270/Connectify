@@ -1,228 +1,202 @@
+/* Chat.css (Corrected & Refactored) */
+
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    color: #f0f0f0; /* Default text color */
 }
 
 button:hover {
     cursor: pointer;
 }
 
-.chatpage {
-    padding-top: 15vh;
-    /* padding-left: 2vw;
-    padding-right: 1vw; */
-    /* background: linear-gradient(to right,#8c9eb5ab,#447cc1ab); */
-    background-color: #1A1A1A;
-    display: flex;
-    flex-direction: row;
-    height: 100vh;
-    /* justify-content: space-evenly; */
-
-}
-
-.chatpage .convo-name {
-    display: flex;
-    flex-direction: column;
-    width: 23vw;
-    margin-left: 4vw;
-    margin-right: 4vw;
- 
-}
-
-.convo-name {
-    background-color: #282828;
-    border-radius: 14px;
-}
-
-.convo-name, .convo-detail {
-    /* background-color: red; */
-    height: 80vh;
-}
-
-.chatpage .convo-detail {
-    display: flex;
-    flex-direction: column;
-    width: 60vw;
-}
-
-
-.chatuser::-webkit-scrollbar {
+/* Custom scrollbar for all scrollable areas */
+::-webkit-scrollbar {
     background-color: #4e4c4c;
     border-radius: 14px;
+    width: 8px;
 }
-
-.chatuser::-webkit-scrollbar-thumb {
+::-webkit-scrollbar-thumb {
     background: #727070;
     border-radius: 14px;
 }
 
+.chatpage {
+    /* Assume 11vh navbar */
+    padding: 11vh 1rem 1rem 1rem;
+    background-color: #1A1A1A;
+    display: flex;
+    flex-direction: row; /* Side-by-side on desktop */
+    min-height: 100vh;
+    justify-content: center; /* Center the layout */
+    gap: 1.5rem; /* Space between columns */
+}
+
+/* 1. LEFT COLUMN (User List) */
+.chatpage .convo-name {
+    display: flex;
+    flex-direction: column;
+    /* Responsive width: 320px, not 23vw */
+    flex: 0 0 320px; 
+    margin: 0; /* Removed vw margins */
+    background-color: #282828;
+    border-radius: 14px;
+    /* Responsive height, 11vh navbar + 1rem padding */
+    height: calc(100vh - 11vh - 2rem); 
+}
+
 .chatpage .searchchat {
-    position: sticky;
-    /* box-shadow: 0 5px 10px rgba(0, 0, 0, 0.5); */
-    /* background-color: #282828; */
+    position: relative; /* For suggestions dropdown */
+    flex-shrink: 0; /* Don't shrink */
+    padding: 1rem;
 }
 
 #search-chat {
-    padding-left: 0.5em;
-    margin: 1em 1em 1em 1em;
-    width: 20em;
+    /* Responsive width */
+    width: 100%; 
     height: 3em;
-    /* background-color: #ffffffab;
-    color: #072371; */
+    padding-left: 1rem;
     background-color: rgba(71, 70, 70, 0.51);
     color: white;
     border-radius: 12px;
-    border-color: transparent;
-
+    border: none;
 }
 
 .suggestion-list-user {
-  color: black;
-  position: absolute;
-  top: 2.5em;
-  left: 0;
-  width: 13.5em;
-  /* background: #fff; */
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  list-style-type: none;
-  padding: 0;
-  margin: 0;
-  z-index: 10;
-}
-
-.suggestion-list-user {
-  background-color: #1A1A1A;
-  margin-left: 1em;
-  margin-top: 1em;
+    color: white;
+    position: absolute;
+    top: 100%; /* Position below the search bar */
+    left: 1rem;
+    right: 1rem; /* Stretch to match search bar */
+    width: auto; /* Let left/right determine width */
+    background-color: #1A1A1A;
+    border: 1px solid #444;
+    border-radius: 4px;
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    z-index: 10;
 }
 
 .suggestion-item {
-  padding: 8px;
-  border-bottom: 1px solid #eee;
-  cursor: pointer;
-  font-size: 0.85em;
+    padding: 8px 12px;
+    border-bottom: 1px solid #333;
+    cursor: pointer;
+    font-size: 0.9em;
 }
 
 .suggestion-item:last-child {
-  border-bottom: none; /* Remove border for the last item */
+    border-bottom: none;
 }
-
 .suggestion-item:hover {
-  background: rgb(137, 137, 137); /* Highlight on hover */
-}
-
-.chatpage .chatname {
-    padding-left: 1em;
-    padding-top: 1em;
-    color: white;
-    /* background-color:#072371; */
-    /* background-color: #121c51; */
-    background-color: #282828;
-    font-weight: bold;
-    font-size: 1.2em;
-    height: 10vh;
-    border-radius: 14px 14px 0px 0px;
+    background: rgb(137, 137, 137);
 }
 
 .chatpage .chatuser {
-    /* background-color: gray; */
-    /* background-color: rgba(15, 13, 13, 0.26); */
     display: flex;
     flex-direction: column;
-    overflow-y: scroll;
+    /* This makes the list scrollable */
+    flex-grow: 1; 
+    overflow-y: auto;
 }
 
 .chatpage .chatuser .user-item {
-  display: flex;
-  justify-content:space-between ;
-    flex: 0 0 auto;
-    padding-top: 1em;
-    padding-left: 1em;
-    margin-right: 1em;
-    height: 5em;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-shrink: 0; /* Prevent shrinking */
+    padding: 0.75rem 1rem;
 }
 
 .user-item img {
-  /* width: 5em;
-  height: 5em;   */
-  max-width: 4em;
-  border-radius: 14px;
-  border: 1px solid yellow;
-}
-
-
-.chat-options {
-  padding-top: 1em;
-}
-
-.chat-dropdown {
-  /* position: relative; */
-  position: absolute;
-  left: 310px;
-  background-color: #fff;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-  z-index: 100;
-}
-
-.chat-dropdown button {
-  -webkit-text-fill-color: black;
-  padding: 10px;
-  border: none;
-  background: none;
-  width: 100%;
-  text-align: left;
-  cursor: pointer;
-}
-
-.chat-dropdown button:hover {
-  background-color: yellow;
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 50%; /* Circular images */
+    border: 2px solid yellow;
+    object-fit: cover;
 }
 
 #userchatbtn {
     background-color: transparent;
     border: none;
-    font-size: 1em;
+    font-size: 1rem;
+    color: #f0f0f0;
+    flex-grow: 1; /* Take up space */
+    text-align: left;
 }
 
-.chatpage .chatinput {
-    /* background: linear-gradient(to right,#a4b7d5,#708cb9); */
+.chat-options {
+    position: relative; /* For dropdown */
+    flex-shrink: 0;
+}
+
+.ellipsis-button {
+  background: none;
+  border: none;
+  color: #aaa;
+  font-size: 1.25rem;
+}
+
+.chat-dropdown {
+    position: absolute;
+    /* Fix: Position relative to the button */
+    right: 100%; 
+    top: 0;
+    background-color: #333;
+    border: 1px solid #555;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    z-index: 100;
+    width: 100px;
+}
+
+.chat-dropdown button {
+    color: white;
+    padding: 10px;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+}
+
+.chat-dropdown button:hover {
+    background-color: yellow;
+    color: black;
+}
+
+/* Message for no chats */
+.no-chats-message {
+  padding: 2rem;
+  text-align: center;
+  color: #888;
+}
+
+/* 2. RIGHT COLUMN (Chat Window) */
+.chatpage .convo-detail {
     display: flex;
-    flex-direction: row;
-    height: 10vh;
-    background-color: #212121;
-    padding-left: 1em;
-    padding-top: 1em;
-    padding-bottom: 1em;
-    border-radius: 0px 0px 14px 14px;
-    /* border-top: 1px solid black; */
-    /* box-shadow: 0 -5px 10px rgba(0, 0, 0, 0.5); */
-}
-
-.reaction {
-    padding-top: 0.2em;
-    margin-right: 4em;
-}
-
-.chatsend {
-    padding-top: 0.2em;
-}
-
-#mssg {
-    padding-left: 0.5em;
-    width: 40em;
-    min-height: 2.8em;
-    height:fit-content;
-    margin-right: 1em;
-    background-color: #4e4c4c;
+    flex-direction: column;
+    /* Responsive width */
+    flex: 1 1 700px; 
+    max-width: 800px;
+    background-color: #282828;
     border-radius: 14px;
-    border-color:transparent;
-    margin-right: 17em;
+    /* Same responsive height as left column */
+    height: calc(100vh - 11vh - 2rem); 
 }
 
+.chatpage .chatname {
+    padding: 1rem 1.25rem;
+    color: white;
+    background-color: #282828;
+    font-weight: bold;
+    font-size: 1.2em;
+    /* Removed 10vh height */
+    flex-shrink: 0; 
+    border-radius: 14px 14px 0 0;
+    border-bottom: 1px solid #444;
+}
 
 /* Chat Area Styling */
 .chatarea {
@@ -231,133 +205,190 @@ button:hover {
     padding: 10px;
     gap: 10px;
     overflow-y: auto;
-    height: 65vh;
-    background-color: rgba(15, 13, 13, 0.26);
+    /* This is the key: it fills the space */
+    flex-grow: 1; 
+    background-color: #1A1A1A; /* Darker bg for chat */
   }
 
-  .chatarea::-webkit-scrollbar {
-    background-color: #4e4c4c;
-    border-radius: 14px;
+.chatpage .chatinput {
+    display: flex;
+    flex-direction: row;
+    align-items: center; /* Vertically center items */
+    /* Removed 10vh height */
+    flex-shrink: 0; 
+    background-color: #212121;
+    padding: 0.75rem 1rem;
+    border-radius: 0 0 14px 14px;
+    gap: 1rem; /* Space items */
 }
 
-.chatarea::-webkit-scrollbar-thumb {
-    background: #727070;
-    border-radius: 14px;
-}
-  
-  /* Date Separator */
-  .date-separator {
-    text-align: center;
-    color: white; /* White color for the date text */
-    font-size: 0.9em;
-    margin: 10px 0;
-  }
-  
-  /* Sent Message */
-  .sendmssg {
-    display: flex;
-    justify-content: flex-end; /* Aligns message to the right */
-  }
-  
-  .first-send {
-    max-width: 60%; /* Restrict message bubble width */
-    background-color: #4e4c4c;
-    color: black; /* Black text color for better readability */
-    padding: 10px 15px;
-    border-radius: 10px 10px 0 10px; /* Round corners */
-    position: relative;
-    right: 1em;
-    word-wrap: break-word;
-    text-align: left;
-  }
-  
-  .sendpart {
-    background-color: white; /* White background for sent message */
-    color: black; /* Black text color */
-    padding: 10px;
-    border-radius: 8px; /* Slight rounding for the inner part */
-  }
-  
-  /* Received Message */
-  .recvmssg {
-    display: flex;
-    justify-content: flex-start; /* Aligns message to the left */
-  }
-  
-  .first-receive {
-    max-width: 60%; /* Restrict message bubble width */
-    background-color: #4e4c4c;
-    color: black; /* Black text color for better readability */
-    padding: 10px 15px;
-    border-radius: 10px 10px 10px 0; /* Round corners */
-    position: relative;
-    word-wrap: break-word;
-    text-align: left;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    left: 1em;
-  }
-  
-  .recvpart {
-    background-color: yellow; /* Yellow background for received message */
-    color: black; /* Black text color */
-    padding: 10px;
-    border-radius: 8px; /* Slight rounding for the inner part */
-  }
-  
-  /* Time Styling */
-  .sendtime, .recvtime {
-    font-size: 12px;
-    color: white; /* White color for time */
-    margin-bottom: 5px;
-  }
-  
-  /* Seen Status */
-  .seen-status {
-    font-size: 12px;
-    color: white; /* White color for seen status */
-    text-align: right;
-    margin-top: 5px;
-  }
-  
-  /* Ellipsis Menu */
-  .message-options {
-    position: relative;
-  }
-  
-  .ellipsis-button {
-    background: none;
-    border: none;
+.reaction, .chatsend {
+    flex-shrink: 0;
     cursor: pointer;
-    color: #333;
-    font-size: 16px;
-    padding: 5px;
-  }
-  
-  .options-dropdown {
-    /* position: relative; */
-    position: absolute;
-    top: 20px;
-    left: -64px;
-    background-color: #fff;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-    z-index: 100;
-  }
-  
-  .options-dropdown button {
-    -webkit-text-fill-color: black;
-    padding: 10px;
+}
+.reaction img, .chatsend img {
+  width: 24px;
+  height: 24px;
+}
+
+.chatmssg {
+  /* This wrapper lets the input grow */
+  flex-grow: 1; 
+}
+
+#mssg {
+    padding: 0.75rem 1rem;
+    /* Responsive: 100% of its parent */
+    width: 100%; 
+    min-height: 2.8em;
+    height: auto;
+    margin: 0; /* Removed huge margins */
+    background-color: #4e4c4c;
+    border-radius: 14px;
     border: none;
-    background: none;
+    color: white;
+    font-size: 1rem;
+}
+#mssg::placeholder {
+  color: #aaa;
+}
+
+  
+/* Date Separator */
+.date-separator {
+  text-align: center;
+  color: white;
+  font-size: 0.9em;
+  margin: 10px 0;
+}
+
+/* Sent Message */
+.sendmssg {
+  display: flex;
+  justify-content: flex-end; 
+}
+
+.first-send {
+  max-width: 60%;
+  background-color: #4e4c4c;
+  color: white; /* Changed text to white */
+  padding: 10px 15px;
+  border-radius: 10px 10px 0 10px;
+  position: relative;
+  word-wrap: break-word;
+  text-align: left;
+}
+
+.sendpart {
+  background-color: transparent; /* Remove inner bubble */
+  color: white; 
+  padding: 0;
+  border-radius: 0;
+}
+
+/* Received Message */
+.recvmssg {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.first-receive {
+  max-width: 60%;
+  background-color: #4e4c4c;
+  color: white; /* Changed text to white */
+  padding: 10px 15px;
+  border-radius: 10px 10px 10px 0;
+  position: relative;
+  word-wrap: break-word;
+  text-align: left;
+}
+
+.recvpart {
+  background-color: transparent; /* Remove inner bubble */
+  color: white; /* Use your yellow if you prefer */
+  padding: 0;
+  border-radius: 0;
+}
+
+/* Time & Seen Status */
+.sendtime, .recvtime {
+  font-size: 12px;
+  color: #aaa; /* Lighter color */
+  margin-bottom: 5px;
+}
+
+.seen-status {
+  font-size: 12px;
+  color: #aaa;
+  text-align: right;
+  margin-top: 5px;
+}
+
+/* Ellipsis Menu */
+.message-options {
+  position: relative;
+  /* Move button to the side */
+  float: right; 
+  margin-left: 8px;
+}
+
+.options-dropdown {
+  position: absolute;
+  /* Fix: Position relative to button */
+  right: 100%; 
+  top: 0;
+  background-color: #333;
+  border: 1px solid #555;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  z-index: 100;
+  width: 100px;
+}
+
+.options-dropdown button {
+  color: white;
+  padding: 10px;
+  border: none;
+  background: none;
+ width: 100%;
+  text-align: left;
+}
+
+.options-dropdown button:hover {
+  background-color: yellow;
+  color: black;
+}
+
+/* =========================================
+   MOBILE RESPONSIVENESS
+  ========================================= */
+@media (max-width: 900px) {
+  .chatpage {
+    /* Stack columns vertically */
+    flex-direction: column; 
+    align-items: center;
+    height: auto; /* Allow page to scroll */
+    min-height: 100vh;
+    padding: 10vh 0.5rem 1rem 0.5rem;
+  }
+
+  .chatpage .convo-name,
+  .chatpage .convo-detail {
+    /* Make columns full width */
+    flex: 1 1 100%; 
     width: 100%;
-    text-align: left;
-    cursor: pointer;
+    max-width: 600px;
+    /* Let content define height */
+    height: auto; 
   }
-  
-  .options-dropdown button:hover {
-    background-color: yellow;
-  }
-  
 
-  
+  .chatpage .convo-name {
+    /* Give user list a max height */
+    max-height: 40vh; 
+  }
+
+  .chatpage .convo-detail {
+    /* Give chat window a fixed height */
+    height: 70vh; 
+  }
+}

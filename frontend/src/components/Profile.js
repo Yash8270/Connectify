@@ -1,247 +1,309 @@
-import React, { useContext, useEffect, useRef, useState } from 'react';
-import '../css_file/Profile.css';
-import profilepick from '../assets/profilepick.jpg';
-import interaction from '../assets/interaction.svg';
-import Connect_Context from '../context/Connectcontext';
-import Like from '../assets/like.svg';
-import commentss from '../assets/comment.svg';
-import activity_img from '../assets/activity.png';
-import Cookies from 'js-cookie';
+import React, { useContext, useEffect, useRef, useState } from "react";
+import Connect_Context from "../context/Connectcontext";
+import Cookies from "js-cookie";
+import Like from "../assets/like.svg";
+import commentss from "../assets/comment.svg";
 
 const Profile = () => {
+  const [profile, setprofile] = useState({ usernames: [] });
+  const [posts, setposts] = useState([]);
+  const [com, setcom] = useState([]);
+  const [comusers, setcomusers] = useState({ usernames: [] });
+  const [replyusers, setreplyusers] = useState({ usernames: [] });
+  const [like, setlike] = useState(false);
+  const [activePostId, setActivePostId] = useState(null);
+  const [comid, setcomid] = useState("");
+  const [visible, setvisible] = useState(null);
+  const [replies, setreplies] = useState([]);
+  const [replytext, setreplytext] = useState({ text: "" });
 
-    const [profile,setprofile] = useState({usernames: []});
-    const [posts, setposts] = useState([]);
-    const [com, setcom] = useState([]);
-    const [comusers, setcomusers] = useState({ usernames: [] });
-    const [replyusers, setreplyusers] = useState({usernames: []});
-    const [like, setlike] = useState(false);
-    const [activePostId, setActivePostId] = useState(null); 
-    const [comid, setcomid] = useState('');
-    const [visible, setvisible] = useState(null);
-    const [replies, setreplies] = useState([]);
-    const [replytext, setreplytext] = useState({text:''});
+  const context = useContext(Connect_Context);
 
-    const context = useContext(Connect_Context);
-    const { authdata, selfpost, idtouser, likepost, dislikepost, getcom, getreply,postreply } = context;
-    console.log(authdata);
+  const {
+    authdata,
+    selfpost,
+    idtouser,
+    likepost,
+    dislikepost,
+    getcom,
+    getreply,
+    postreply,
+  } = context;
 
-   const inputRef = useRef(null);
+  const inputRef = useRef(null);
 
-    const handleClear = () => {
-        if(inputRef.current) {
-            inputRef.current.value='';
-        }
-    } 
-
-    const Submitreply = async (comment_id) => {
-        const userreply = await postreply(comment_id, authdata.authtoken, replytext.text);
-        console.log("User reply: ",userreply);
-        const allreply = await getreply(comment_id, authdata.authtoken);
-        const useridarray = allreply.map(reply => reply.userid);
-        const usernames = await idtouser(useridarray);
-        setreplyusers(usernames);
-        setreplies(allreply);
- 
-        const allpost = await selfpost(authdata.authtoken);
-        setposts(allpost);
-        setvisible(comment_id);
-        setreplytext({text:''});
-        handleClear();
+  const handleClear = () => {
+    if (inputRef.current) {
+      inputRef.current.value = "";
     }
+  };
 
-    const handleCommentClick = async (postId) => {
-        if (activePostId === postId) {
-            setActivePostId(null);
-        } else {
-            setActivePostId(postId);
+  const Submitreply = async (comment_id) => {
+    const userreply = await postreply(
+      comment_id,
+      authdata.authtoken,
+      replytext.text
+    );
+    const allreply = await getreply(comment_id, authdata.authtoken);
 
-            try {
-                const compost = await getcom(postId, authdata.authtoken);
-                const useridarray = compost.map(comment => comment.userid);
-                console.log(useridarray);
-                const usernames = await idtouser(useridarray);
-                console.log(usernames);
-                setcomusers(usernames);
-                setcom(compost);
-                setcomid(postId);
-            } catch (error) {
-                console.error("Error fetching comments:", error);
-            }
-        }
+    const useridarray = allreply.map((reply) => reply.userid);
+    const usernames = await idtouser(useridarray);
+
+    setreplyusers(usernames);
+    setreplies(allreply);
+
+    const allpost = await selfpost(authdata.authtoken);
+    setposts(allpost);
+
+    setvisible(comment_id);
+    setreplytext({ text: "" });
+    handleClear();
+  };
+
+  const handleCommentClick = async (postId) => {
+    if (activePostId === postId) {
+      setActivePostId(null);
+    } else {
+      setActivePostId(postId);
+
+      const compost = await getcom(postId, authdata.authtoken);
+      const useridarray = compost.map((comment) => comment.userid);
+      const usernames = await idtouser(useridarray);
+
+      setcomusers(usernames);
+      setcom(compost);
+      setcomid(postId);
+    }
+  };
+
+  const handlelike = async (post) => {
+    if (like) {
+      await dislikepost(post._id, authdata.authtoken);
+      setlike(false);
+    } else {
+      await likepost(post._id, authdata.authtoken);
+      setlike(true);
+    }
+    const updated = await selfpost(authdata.authtoken);
+    setposts(updated);
+  };
+
+  const handlereply = async (comment_id) => {
+    if (visible === comment_id) {
+      setvisible(null);
+    } else {
+      const replydata = await getreply(comment_id, authdata.authtoken);
+      const useridarray = replydata.map((reply) => reply.userid);
+      const usernames = await idtouser(useridarray);
+
+      setreplyusers(usernames);
+      setreplies(replydata);
+      setvisible(comment_id);
+    }
+  };
+
+  useEffect(() => {
+    const fetchPosts = async () => {
+      const fetchedPosts = await selfpost(authdata.authtoken);
+      setposts(fetchedPosts);
+
+      const useridarray = [authdata.userid];
+      const usernames = await idtouser(useridarray);
+      setprofile(usernames);
     };
+    fetchPosts();
+  }, [authdata]);
 
-    const handlelike = async (post) => {
-        try {
-            if (like) {
-                await dislikepost(post._id, authdata.authtoken);
-                setlike(false);
-            } else {
-                await likepost(post._id, authdata.authtoken);
-                setlike(true);
-            }
-            const updatedpost = await selfpost(authdata.authtoken);
-            setposts(updatedpost);
-        } catch (error) {
-            console.error("Error updating likes:", error);
-        }
-    }
+  return (
+    <div className="min-h-screen bg-[#151515] pt-24 px-4 md:px-10 pb-10 text-white">
+      <div className="grid grid-cols-12 gap-6 max-w-[1600px] mx-auto">
 
+        {/* LEFT : PROFILE CARD */}
+        <div className="col-span-12 md:col-span-3">
+          <div className="bg-[#222] p-6 rounded-2xl shadow-lg sticky top-24">
+            <div className="flex flex-col items-center">
+              <div className="w-28 h-28 rounded-full overflow-hidden ring-4 ring-yellow-400">
+                <img
+                  src={Cookies.get("profile")}
+                  alt="profile"
+                  className="w-full h-full object-cover"
+                />
+              </div>
 
-    const handlereply = async (comment_id) => {
-        if(visible === comment_id) {
-            setvisible(null);
-        }
-        else {
-            const replydata = await getreply(comment_id, authdata.authtoken);
-            // console.log(replydata);
-            const useridarray = replydata.map(reply => reply.userid);
-            const usernames = await idtouser(useridarray);
-            console.log(usernames);
-            setreplyusers(usernames);
-            setreplies(replydata);
-            setvisible(comment_id);
-        }
-       
-    }
-    
+              <div className="mt-4 text-2xl font-semibold">
+                {profile.usernames[0]}
+              </div>
 
-    useEffect(() => {
-        const fetchPosts = async () => {
-            try {
-                const fetchedPosts = await selfpost(authdata.authtoken);
-                setposts(fetchedPosts);
+              <div className="text-gray-400 text-sm mt-1">
+                Passionate Web Developer
+              </div>
 
-                const useridarray = [authdata.userid];
-                console.log("Users: ",useridarray);
-                const usernames = await idtouser(useridarray);
-                setprofile(usernames);
-
-            } catch (error) {
-                console.error("Error fetching posts:", error);
-            }
-        };
-
-        fetchPosts();
-    }, [authdata]);
-
-    
-
-    return(
-        <>
-        <div className='main-profile'>
-        <div className='profile-container'>
-          <div className='profile-detail'>
-            <div className='profile-image'>
-                <img  id='profileimg' src={Cookies.get('profile')} alt='profile-pick'></img>
+              <button className="mt-4 bg-yellow-400 text-black px-5 py-2 rounded-lg font-semibold hover:bg-yellow-300">
+                Edit Profile
+              </button>
             </div>
-                <div className='profile-user'>{profile.usernames[0]}</div>
-                <div className='bio'>Passionate Web developer</div>
-                <div className='edit'>Edit Profile</div>
-            </div>  
-            <div className='profile-depth'>
-                <div className='activity'>Activity</div>
-                <div className='graph'><img id="graphimg" src={activity_img} alt="graph"></img></div>
-                <div className='profile-setting'>
-                  <div className='setting-head'> My Profile Setting</div> 
-                    <div className='setting-pass'>Password<input value="**********"></input></div> 
-                    <div className='setting-mail'>E-mail<input value="jjk@gmail.com"></input></div>
-                   </div>
-                </div>  
-               </div> 
-       <div className='post-comment-flex'>        
-       <div className='post-down-scroll'>         
-                {posts.length > 0 ? (posts.map((post, index) => (
-        <div className='profile-total-post' key={index}>
-        <div className='post-description'>{post.description || 'Anonymous'}</div>
-        <div className="post-picks">
-            {post.image ? (
-                <img id="postimg" src={post.image} alt="post" />
+
+            {/* Stats */}
+            <div className="mt-6 grid grid-cols-3 text-center">
+              <div>
+                <div className="text-xl font-bold">{posts.length}</div>
+                <div className="text-xs text-gray-400">Posts</div>
+              </div>
+
+              <div>
+                <div className="text-xl font-bold">0</div>
+                <div className="text-xs text-gray-400">Followers</div>
+              </div>
+
+              <div>
+                <div className="text-xl font-bold">0</div>
+                <div className="text-xs text-gray-400">Following</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* CENTER : POSTS GRID */}
+        <div className="col-span-12 md:col-span-6">
+          <h1 className="text-2xl mb-4 font-semibold">Your Posts</h1>
+
+          {posts.length > 0 ? (
+            posts.map((post, index) => (
+              <div
+                key={index}
+                className="bg-[#222] rounded-2xl p-4 mb-6 shadow-lg"
+              >
+                <div className="font-semibold mb-2">{post.description}</div>
+
+                <div className="w-full h-72 rounded-xl overflow-hidden bg-black">
+                  {post.image ? (
+                    <img
+                      src={post.image}
+                      alt="post"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="text-center py-10 text-gray-400">
+                      No image available
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex items-center mt-3 gap-6">
+                  <div className="flex items-center gap-2 cursor-pointer">
+                    <img
+                      src={Like}
+                      alt="like"
+                      className="w-6 h-6 cursor-pointer"
+                      onClick={async () => await handlelike(post)}
+                    />
+                    {post.likes.length}
+                  </div>
+
+                  <div
+                    className="flex items-center gap-2 cursor-pointer"
+                    onClick={() => handleCommentClick(post._id)}
+                  >
+                    <img src={commentss} className="w-6 h-6" alt="comments" />
+                    {post.comments.length}
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="text-center text-gray-400 mt-10 bg-[#222] py-10 rounded-2xl">
+              No Posts Yet
+            </div>
+          )}
+        </div>
+
+        {/* RIGHT : COMMENT SECTION */}
+        <div className="col-span-12 md:col-span-3">
+          <div className="bg-[#222] rounded-2xl p-5 shadow-lg sticky top-24 h-fit">
+
+            {!activePostId ? (
+              <div className="text-gray-400 text-center">
+                Select a post to view comments
+              </div>
             ) : (
-                <p>No image available</p>
-            )}
-        </div>          
-       <div className="icon">
-                                   <div className="heart">
-                                       {/* <button id="likebtn" onClick={async () => await handlelike(post)}> */}
-                                           <img src={Like} alt='Likes' onClick={async () => await handlelike(post)} ></img>
-                                       {/* </button> */}
-                                       {post.likes.length}
-                                   </div>
-                                   <div className="comment"> 
-                                       {/* <button onClick={async () => await handleCommentClick(post._id)}> */}
-                                       <img src={commentss} alt='Comments' onClick={async () => await handleCommentClick(post._id)}></img>
-                                           {activePostId === post._id ? 'Hide Comments' : 'Show Comments'}
-                                       {/* </button> */}
-                                       {post.comments.length}
-                                   </div>
-                               </div>
-    </div>   
-))):(
-    <div className='profile-total-post'>
-        <div className='post-descirption'>No post</div>
-    </div>
-)}
+              <>
+                <div className="text-lg font-semibold mb-3">
+                  Comments on {profile.usernames[0]}'s post
+                </div>
 
-</div>
-          <div className='profile-comment-section'>
-
-
-          {activePostId ? (
-                    <>
-                        <div className="profile-comment-head">
-                            Comments on {profile.usernames[0]}'s post
+                {com.length > 0 ? (
+                  <div className="space-y-4">
+                    {com.map((comment, idx) => (
+                      <div key={idx} className="bg-[#1b1b1b] p-3 rounded-xl">
+                        <div className="font-semibold">
+                          {comusers.usernames[idx]}
+                          <button
+                            className="ml-3 text-yellow-300 text-xs"
+                            onClick={() => handlereply(comment._id)}
+                          >
+                            replies
+                          </button>
                         </div>
-                        <div className="profile-comment-detail">
-                            {com.length > 0 ? (
-                                com.map((comment, idx) => (
-                                    <div className="profile-comment" key={idx}>
-                                        <div className='profile-user-com-head'>
-                                      <div className='compic'><img src={comment.profilepic} alt='pick'></img> </div>
-                                        <div className="profile-top-profile">{comusers.usernames[idx] || 'Anonymous'}
-                                            <button id='reply-visible' onClick={ async () => await handlereply(comment._id)}>replies</button>
-                                        </div>
-                                        </div>
-                                        <div className="profile-mssg">{comment.text}</div>
 
-                                        {visible === comment._id && (
-                              <div className="reply-container">
-                                <div className="reply-declare">Replies:</div>
-                                {replies.length > 0 ? (
-                                    replies.map((reply, index) => (
-                                        <div key={index} className="reply-detail">
-                                            <div className="replypic"><img src={reply.profilepic} alt='profilepic'></img></div>
-                                            <div className="reply-head">{replyusers.usernames[index]}</div>
-                                            <div className="reply-mssg">{reply.text}</div>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <div className="reply-empty">No replies yet</div>
-                                )}
+                        <div className="text-gray-300 mt-1">{comment.text}</div>
+
+                        {/* Replies */}
+                        {visible === comment._id && (
+                          <div className="mt-3 pl-3 border-l-2 border-yellow-400">
+                            <div className="text-sm text-gray-400 mb-1">
+                              Replies:
                             </div>
+
+                            {replies.length > 0 ? (
+                              replies.map((reply, index) => (
+                                <div
+                                  key={index}
+                                  className="text-sm text-gray-300 mb-2"
+                                >
+                                  <span className="font-semibold">
+                                    {replyusers.usernames[index]}:
+                                  </span>{" "}
+                                  {reply.text}
+                                </div>
+                              ))
+                            ) : (
+                              <div className="text-gray-500 text-sm">
+                                No replies
+                              </div>
+                            )}
+                          </div>
                         )}
 
-                                        <div className="comment-reply">
-                                            <input id="reply" placeholder="reply" ref={inputRef} onChange={(e) => setreplytext({...replytext, text: e.target.value})}></input>
-                                            <button id="replybtn" onClick={async () => await Submitreply(comment._id)}>reply</button>
-                                        </div>
-                                    </div>
-                                ))
-                            ) : (
-                                <div className='comment-detail'>No comments yet</div>
-                            )}
+                        {/* Reply input */}
+                        <div className="mt-3 flex gap-2">
+                          <input
+                            ref={inputRef}
+                            placeholder="Reply..."
+                            className="flex-1 bg-[#333] px-3 py-2 rounded-lg outline-none border border-white/10"
+                            onChange={(e) =>
+                              setreplytext({ text: e.target.value })
+                            }
+                          />
+                          <button
+                            className="bg-yellow-400 text-black px-3 py-1 rounded-lg"
+                            onClick={() => Submitreply(comment._id)}
+                          >
+                            Send
+                          </button>
                         </div>
-                    </>
+                      </div>
+                    ))}
+                  </div>
                 ) : (
-                    <div className="comment-detail">
-                        <div>Now you have hidden the comments</div>
-                    </div>
-                )}        
+                  <div className="text-gray-400">No comments yet</div>
+                )}
+              </>
+            )}
+          </div>
         </div>
-       </div> 
+      </div>
     </div>
-        </>
-    );
-}
+  );
+};
 
 export default Profile;

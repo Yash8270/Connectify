@@ -1,64 +1,123 @@
+/* Home.css (Corrected & Refactored) */
 
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Avenir', sans-serif;
-  }
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Avenir', sans-serif;
+}
 
-  html, body {
-    margin: 0;
-    height: 100%;
-  }
+html,
+body {
+  margin: 0;
+  height: 100%;
+  /* Added a default text color and overflow-x to prevent horizontal scroll */
+  color: #f0f0f0; 
+  overflow-x: hidden;
+}
 
+.connect {
+  display: flex;
+  flex-direction: row; /* This is the default, will be changed on mobile */
+  flex-wrap: wrap; /* Allows items to stack if they run out of space */
+  justify-content: center; /* Horizontally centers the content */
+  align-items: center; /* Vertically centers the content */
+  gap: 2rem; /* Adds space between the text block and the animation */
+
+  /* Softer, more subtle dark gradient */
+  background: linear-gradient(270deg, #111 12%, #333 100%);
+
+  /* Use min-height to ensure it fills the screen but can grow if needed */
+  min-height: 100vh;
+  
+  /* Combined padding. Assumes 11vh for navbar, 4vw for side padding */
+  padding: 11vh 4vw 4vw 4vw;
+}
+
+.connect .inform {
+  /* flex: 1 1 500px;
+    This shorthand means:
+    flex-grow: 1 (allow it to grow)
+    flex-shrink: 1 (allow it to shrink)
+    flex-basis: 500px (start at this width before growing/shrinking)
+  */
+  flex: 1 1 500px;
+  max-width: 650px; /* Prevents text block from getting too wide */
+
+  /* Removed the harsh white border and huge margin-top */
+  /* Added a modern "glass" effect */
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px; /* Rounded corners */
+  backdrop-filter: blur(5px); /* This creates the "frosted glass" look */
+  padding: 2.5rem; /* Generous padding inside the box */
+}
+
+.informhead {
+  /*
+    THIS IS THE KEY FOR RESPONSIVE FONT SIZE
+    clamp(min, preferred, max);
+    - It will be 2rem on small screens.
+    - It will be 3rem on large screens.
+    - It will be 4vw (4% of viewport width) everywhere in between.
+  */
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 1rem;
+}
+
+.informcontent {
+  /* Same clamp() technique for the body text */
+  font-size: clamp(1rem, 2vw, 1.15rem);
+  color: #cccccc;
+  line-height: 1.7; /* Increased line-height for better readability */
+}
+
+.connect .social {
+  flex: 1 1 500px; /* Same flex rules as the .inform box */
+  max-width: 600px;
+  display: flex; /* Use flex to center the Lottie player inside */
+  justify-content: center;
+  align-items: center;
+}
+
+#socialimage {
+  /* Make the image fill its container, not a fixed vw size.
+    Removed the weird padding-left.
+  */
+  width: 100%;
+  height: auto;
+  max-width: 500px; /* Max size for the animation */
+  background: transparent;
+}
+
+
+/* =========================================
+  MOBILE RESPONSIVENESS
+  =========================================
+  This @media query applies rules ONLY when the screen is 900px or less.
+*/
+@media (max-width: 900px) {
   .connect {
-    display: flex;
-    flex-wrap: wrap;
-    flex-direction: row;
-    justify-content: center;
-    align-content : flex-start;
-    /* background: linear-gradient(to right,#8c9eb5ab,#447cc1ab); */
-    background: linear-gradient(270deg, #000000 12%, #4d4d4d 100%);
-
-    height: 100vh;
-    /* overflow-y: scroll; */
-    padding-top: 11vh;
+    /* Stack the columns on top of each other instead of side-by-side */
+    flex-direction: column;
+    padding-top: 12vh; /* A bit more space from the top on mobile */
+    text-align: center; /* Center-align the text */
   }
 
-  .connect .inform {
-    max-width: 44vw;
-    padding-top: 1em;
-    padding-left: 4.4vw;
-    border: 3px solid white;
-    /* border-radius: 73px; */
-    /* outline: 5px solid #072371;
-    outline-offset: 0.1em; */
-    padding-right: 2em;
-    margin-top: 6em;
-    padding-bottom: 1em;
-    height: fit-content;
-  }
-
-  .informhead {
-    font-size: 3vw;
-  }
-
+  .connect .inform,
   .connect .social {
-    max-width: 50vw;
-    height: fit-content;
-    /* padding-left: 2em; */
-  }
-
-  .informcontent {
-    font-size: 1.4vw;
+    /* Allow them to be auto-sized (they will be 100% wide)
+      but set a max-width so they don't touch the screen edges.
+    */
+    flex-basis: auto;
+    width: 100%;
+    max-width: 90%; 
   }
 
   #socialimage {
-    background: transparent;
-    align-self: flex-end;
-  padding-left: 10vw;
-  width: 50vw;
-  height: 39vw;
+    max-width: 350px; /* Make animation a bit smaller on mobile */
+    margin-top: 1rem; /* Add some space above the animation */
   }
-
-  
+}

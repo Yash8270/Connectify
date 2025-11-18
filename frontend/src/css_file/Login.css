@@ -1,3 +1,6 @@
+/* Login.css (Corrected with Solid Colors & Responsive Layout) */
+
+/* 1. GLOBAL STYLES */
 * {
     margin: 0;
     padding: 0;
@@ -5,157 +8,218 @@
     font-family: 'Avenir', sans-serif;
 }
 
-button:hover {
-    cursor:pointer;
+html, body {
+  width: 100%;
+  height: 100%;
+  color: #f0f0f0; /* Default text color */
+  overflow-x: hidden;
 }
 
 button {
-    -webkit-text-fill-color: white;
+    cursor: pointer;
+    border: none;
+    font-size: 1rem;
+    font-weight: bold;
+    border-radius: 8px;
+    transition: opacity 0.3s ease, transform 0.1s ease;
 }
 
+button:active {
+  /* Simple "press" effect */
+  transform: scale(0.98);
+}
+
+/* 2. MAIN PAGE WRAPPER */
 .form-body {
-    padding-top: 25vh;
-    display: flex;
-    /* background: linear-gradient(to right,#8c9eb5ab,#447cc1ab); */
-    background: linear-gradient(270deg, #000000 12%, #4d4d4d 100%);
-    justify-content: center;
-    align-content: center;
+    min-height: 100vh; 
     width: 100vw;
-    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center; 
+    /* Your original dark background gradient */
+    background: linear-gradient(270deg, #000000 12%, #4d4d4d 100%);
+    padding: 2rem 1rem;
+    margin-top: 40px;
 }
 
+/* 3. MAIN FORM CONTAINER */
 .form-container {
-    position:relative;
-    width: 50vw;
-    height: 65vh;
+    position: relative;
+    width: 100%;
+    max-width: 900px; /* Max width on desktop */
+    min-height: 600px;
     display: flex;
     flex-direction: row;
-    /* flex-wrap: wrap; */
-    max-height: 100vh;
-    justify-content: space-evenly;
-    align-content: center;
+    
+    /* Your original border and shadow */
     border: 1px solid white;
     border-radius: 16px;
-    box-shadow: 0.5em 0.5em 1em black;   
+    box-shadow: 0.5em 0.5em 1em black;
+    
+    /* A solid, dark background for the form area */
+    background-color: #1a1a1a;
+
+    /* This is CRITICAL. It clips the content as the panel slides. */
+    overflow: hidden; 
 }
 
-.form-container .login {
-    margin-top: 2em;
-}
-
+/* 4. LOGIN & SIGNIN FORM WRAPPERS */
+.form-container .login,
 .form-container .signin {
-    padding-left: 1em;
+    flex: 1; /* Each form takes up 50% of the container */
+    padding: 3rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    z-index: 1; /* Sits under the panel */
 }
 
-
-#username,#userinput,#pass,#password,#logbtn {
-    display: block;
+/* 5. GENERAL FORM ELEMENT STYLING */
+#log, #sign {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
 }
 
-#username,#userinput,#pass,#password {
-    margin-bottom: 1em;
+#log label, #sign label {
+  font-size: 1.1rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  color: #eee;
 }
 
-#userinput,#password {
-    border-radius: 5px;
-    background-color: transparent;
+#log input, #sign input {
+  width: 100%; 
+  padding: 0.8rem 1rem; 
+  margin-bottom: 1.2rem;
+
+  /* Solid input style */
+  background-color: #333;
+  border: 1px solid #777;
+  border-radius: 5px; /* From your original */
+  
+  color: white; /* Text color */
+  font-size: 1rem;
 }
 
-#logbtn {
-    margin-top: 2em;
-    /* background-color: #072371; */
-    background-color: rgb(194, 194, 44);
-    -webkit-text-fill-color: black;
-    width: 8em;
-    height: 3em;
-    font-size: 1em;
-    font-weight: bold;
-    border-radius: 8px;
+#log input::placeholder, 
+#sign input::placeholder {
+  color: #aaa;
 }
 
-
-#newuser,#newinput,#email,#eid,#newpass,#newpassword,#confpass,#confpassword,#signbtn {
-    display: block;
+/* Style form buttons (using your original color) */
+#logbtn, #signbtn {
+  background-color: rgb(194, 194, 44);
+  color: black;
+  padding: 0.8rem 1.5rem;
+  margin-top: 1rem;
 }
 
-#username,#pass,#newuser,#email,#newpass,#confpass {
-    font-size: 1.5em;
-    font-weight: bold;
+#logbtn:hover, #signbtn:hover {
+  opacity: 0.9;
 }
 
-#userinput,#newinput,#eid,#newpassword,#confpassword,#password {
-    width: 16vw;
-    height: 6.4vh;
-}
-
-#newuser {
-    margin-top: 0.5em;
-}
-
-#newuser,#newinput,#newpass,#newpassword,#confpass,#confpassword,#email,#eid {
-    margin-bottom: 0.5em;
-}
-
-#newinput,#newpassword,#confpassword,#eid {
-    border-radius: 5px;
-    background-color: transparent;
-}
-
-#signbtn {
-    /* background-color: #072371; */
-    background-color: rgb(194, 194, 44);
-    -webkit-text-fill-color: black;
-    width: 8em;
-    height: 3em;
-    font-size: 1em;
-    font-weight: bold;
-    border-radius: 8px;
-}
-
-
-
+/* 6. SLIDING PANEL */
 .panel {
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    position:absolute;
-    width: 25vw;
-    height: 65vh;
-    left: 0vw;
-    background-color:rgb(154, 154, 27);
+    text-align: center;
+    
+    position: absolute;
+    top: 0;
+    z-index: 10; /* Sits on top of the forms */
+    
+    width: 50%;
+    height: 100%;
+
+    /* Your original solid yellow background */
+    background-color: rgb(154, 154, 27);
+    
     color: white;
     font-weight: bold;
-    transition: left 1s ease, border-radius 1s ease;
+    
+    transition: left 1s ease, top 1s ease, border-radius 1s ease;
 }
 
 .panel .paneltxt {
-    font-size: 1.4em;
-    padding-left: 1.2em;
-    padding-right: 1.2em;
+    font-size: clamp(1.1rem, 2vw, 1.4rem);
+    padding: 0 2.5rem;
     margin-bottom: 2em;
+    line-height: 1.6;
 }
 
+/* Panel toggle button (using your original gradient) */
 #panelbtn {
     background: linear-gradient(270deg, #000000 12%, #666666 100%);
-    /* color: #072371; */
-    width: 8em;
-    height: 3em;
-    font-size: 1em;
-    font-weight: bold;
-    border-radius: 8px;
+    padding: 0.8rem 1.5rem;
 }
 
+#panelbtn:hover {
+  opacity: 0.9;
+}
 
+/* 7. DESKTOP ANIMATION (Left/Right) */
 .right {
-    left: 25vw;
+    left: 50%;
     border-radius: 0px 16px 16px 0px;
 }
 
 .left {
-    left: 0vw;
+    left: 0%;
     border-radius: 16px 0px 0px 16px;
 }
 
+/* =========================================
+  8. MOBILE RESPONSIVENESS
+  ========================================= */
+@media (max-width: 768px) {
+  
+  .form-body {
+    align-items: flex-start;
+    padding-top: 10vh;
+  }
 
+  .signin{
+    margin-top: 30px;
+  }
+
+  .form-container {
+    flex-direction: column; 
+    max-width: 420px;
+    min-height: 0;
+    height: auto; 
+  }
+
+  .form-container .login,
+  .form-container .signin {
+    flex: auto;
+    width: 100%;
+    min-height: 400px; 
+    padding: 2.5rem 1.5rem;
+  }
+
+  /* --- MOBILE PANEL --- */
+  .panel {
+    width: 100%;
+    height: 50%;
+    left: 0 !important; 
+  }
+
+  .panel .paneltxt {
+    padding: 0 1.5rem;
+  }
+
+  /* We now animate the 'top' property */
+  .right {
+    top: 50%; /* Slides to the bottom */
+    border-radius: 0px 0px 16px 16px;
+  }
+
+  .left {
+    top: 0%; /* Slides to the top */
+    border-radius: 16px 16px 0px 0px;
+  }
+}
 
