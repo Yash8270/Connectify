@@ -25,3 +25,99 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+/* --------------------------------------------------
+   COMMENT PANEL (OPEN + CLOSE)
+-------------------------------------------------- */
+.comment-panel {
+  opacity: 0;
+  transform: translateX(15px);
+  transition: all 0.25s ease-out;
+}
+
+.comment-panel.open {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.comment-panel.close {
+  opacity: 0;
+  transform: translateX(15px);
+}
+
+/* --------------------------------------------------
+   INDIVIDUAL COMMENT CARD (OPEN + CLOSE)
+-------------------------------------------------- */
+.comment-card {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.25s ease-out;
+}
+
+.comment-card.open {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.comment-card.close {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+/* --------------------------------------------------
+   COMMENT INPUT ANIMATION
+-------------------------------------------------- */
+.comment-input {
+  opacity: 0;
+  transform: translateY(8px);
+  transition: all 0.25s ease-out;
+}
+
+.comment-input.open {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.comment-input.close {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+/* --------------------------------------------------
+   REPLY EXPAND COLLAPSE
+-------------------------------------------------- */
+.reply-expand {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 0.35s ease-out, opacity 0.25s ease-out;
+}
+
+.reply-expand.open {
+  max-height: 800px;
+  opacity: 1;
+}
+
+.reply-expand.close {
+  max-height: 0;
+  opacity: 0;
+}
+
+/* --------------------------------------------------
+   REPLY ITEM ANIMATION
+-------------------------------------------------- */
+.reply-item {
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: all 0.25s ease-out;
+}
+
+.reply-item.open {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reply-item.close {
+  opacity: 0;
+  transform: translateY(-6px);
+}
