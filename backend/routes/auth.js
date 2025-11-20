@@ -137,14 +137,20 @@ router.post("/signin", upload.single('profilepic'), async (req, res) => {
 router.post("/login", async (req, res) => {
   try {
     const { username, password } = req.body;
+    console.log("Request Body:", req.body);
 
     let user_name = await User.findOne({ username: req.body.username });
+
+    const userss = await User.find();
+    console.log("All Users:", userss);
 
     if (!user_name) {
       return res.status(401).json({error: "User does not exists", value:0});
     }
 
     const passCompare = await bcrypt.compare(password, user_name.password);
+
+    console.log("Password Match:", passCompare);
 
     if (!passCompare) {
       return res.status(401).json({error: "Incorrect password", value:0});

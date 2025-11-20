@@ -5,7 +5,6 @@ import Like from "../assets/like.svg";
 import commentss from "../assets/comment.svg";
 
 const Profile = () => {
-  // USER PROFILE DATA (from cookies)
   const [profile, setprofile] = useState({
     username: "",
     profilepic: "",
@@ -19,12 +18,15 @@ const Profile = () => {
   const [com, setcom] = useState([]);
   const [comusers, setcomusers] = useState({ usernames: [] });
   const [replyusers, setreplyusers] = useState({ usernames: [] });
-  const [like, setlike] = useState(false);
+
   const [activePostId, setActivePostId] = useState(null);
   const [visible, setvisible] = useState(null);
   const [replies, setreplies] = useState([]);
-  const [replytext, setreplytext] = useState({ text: "" });
+
   const [comtext, setcomtext] = useState({ text: "" });
+  const [replytext, setreplytext] = useState({ text: "" });
+
+  const [isMobile, setIsMobile] = useState(false);
 
   const context = useContext(Connect_Context);
 
@@ -42,11 +44,20 @@ const Profile = () => {
 
   const inputRef = useRef(null);
 
+  // CLEAR INPUT
   const handleClear = () => {
     if (inputRef.current) inputRef.current.value = "";
   };
 
-  // ⭐ LOAD USER PROFILE FROM COOKIES
+  // DETECT MOBILE VIEW
+  useEffect(() => {
+    const detect = () => setIsMobile(window.innerWidth < 768);
+    detect();
+    window.addEventListener("resize", detect);
+    return () => window.removeEventListener("resize", detect);
+  }, []);
+
+  // LOAD PROFILE INFO FROM COOKIES
   useEffect(() => {
     setprofile({
       username: Cookies.get("username"),
@@ -60,8 +71,10 @@ const Profile = () => {
     });
   }, []);
 
-  // ⭐ SUBMIT COMMENT
+  // SUBMIT COMMENT
   const SubmitComment = async (postId) => {
+    if (!comtext.text.trim()) return;
+
     await postcom(postId, authdata.authtoken, comtext.text);
 
     const allcom = await getcom(postId, authdata.authtoken);
@@ -71,24 +84,25 @@ const Profile = () => {
     setcom(allcom);
     setcomusers(usernames);
 
-    // Update posts
+    // refresh posts
     const updated = await selfpost(authdata.authtoken);
     setposts(updated);
 
     setcomtext({ text: "" });
-    handleClear();
   };
 
-  // ⭐ SUBMIT REPLY
+  // SUBMIT REPLY
   const Submitreply = async (comment_id) => {
+    if (!replytext.text.trim()) return;
+
     await postreply(comment_id, authdata.authtoken, replytext.text);
 
-    const allreply = await getreply(comment_id, authdata.authtoken);
-    const useridarray = allreply.map((r) => r.userid);
-    const usernames = await idtouser(useridarray);
+    const replydata = await getreply(comment_id, authdata.authtoken);
+    const ids = replydata.map((r) => r.userid);
+    const usernames = await idtouser(ids);
 
     setreplyusers(usernames);
-    setreplies(allreply);
+    setreplies(replydata);
 
     const updated = await selfpost(authdata.authtoken);
     setposts(updated);
@@ -98,7 +112,7 @@ const Profile = () => {
     handleClear();
   };
 
-  // ⭐ SHOW COMMENTS FOR POST
+  // SHOW COMMENTS
   const handleCommentClick = async (postId) => {
     if (activePostId === postId) {
       setActivePostId(null);
@@ -116,69 +130,54 @@ const Profile = () => {
     setcomusers(usernames);
   };
 
-  // ⭐ LIKE / DISLIKE POST
+  // LIKE POST
   const handlelike = async (post) => {
-    if (like) {
+    if (post.likes.includes(authdata.userid)) {
       await dislikepost(post._id, authdata.authtoken);
-      setlike(false);
     } else {
       await likepost(post._id, authdata.authtoken);
-      setlike(true);
     }
 
     const updated = await selfpost(authdata.authtoken);
     setposts(updated);
   };
 
-  // ⭐ SHOW REPLIES UNDER A COMMENT
+  // SHOW REPLIES
   const handlereply = async (comment_id) => {
     if (visible === comment_id) return setvisible(null);
 
     const replydata = await getreply(comment_id, authdata.authtoken);
-    const useridarray = replydata.map((r) => r.userid);
-    const usernames = await idtouser(useridarray);
+    const ids = replydata.map((r) => r.userid);
+    const usernames = await idtouser(ids);
 
     setreplyusers(usernames);
     setreplies(replydata);
     setvisible(comment_id);
   };
 
-  // ⭐ LOAD POSTS ON PAGE LOAD
+  // LOAD POSTS ON PAGE LOAD
   useEffect(() => {
-    const fetchPosts = async () => {
-      const fetchedPosts = await selfpost(authdata.authtoken);
-      setposts(fetchedPosts);
-
-      // const useridarray = [authdata.userid];
-      // const usernames = await idtouser(useridarray);
-
-      // setprofile(usernames);
+    const load = async () => {
+      const fetched = await selfpost(authdata.authtoken);
+      setposts(fetched);
     };
-    fetchPosts();
+    load();
   }, [authdata]);
 
   return (
     <div className="min-h-screen bg-[#151515] pt-24 px-4 md:px-10 pb-10 text-white">
       <div className="grid grid-cols-12 gap-6 max-w-[1600px] mx-auto">
 
-        {/* LEFT PROFILE CARD */}
+        {/* LEFT PROFILE */}
         <div className="col-span-12 md:col-span-3">
           <div className="bg-[#222] p-6 rounded-2xl shadow-lg sticky top-24">
 
             <div className="flex flex-col items-center">
               <div className="w-28 h-28 rounded-full overflow-hidden ring-4 ring-yellow-400">
-                <img
-                  // src={profile.profilepic}
-                  src = "https://i.pravatar.cc/300"
-                  alt="profile"
-                  className="w-full h-full object-cover"
-                />
+                <img src="https://i.pravatar.cc/300" className="w-full h-full object-cover" />
               </div>
 
-              <div className="mt-4 text-2xl font-semibold">
-                {profile.username}
-              </div>
-
+              <div className="mt-4 text-2xl font-semibold">{profile.username}</div>
               <div className="text-gray-400 text-sm mt-1">{profile.bio}</div>
 
               <button className="mt-4 bg-yellow-400 text-black px-5 py-2 rounded-lg font-semibold hover:bg-yellow-300">
@@ -192,12 +191,10 @@ const Profile = () => {
                 <div className="text-xl font-bold">{posts.length}</div>
                 <div className="text-xs text-gray-400">Posts</div>
               </div>
-
               <div>
                 <div className="text-xl font-bold">{profile.followers}</div>
                 <div className="text-xs text-gray-400">Followers</div>
               </div>
-
               <div>
                 <div className="text-xl font-bold">{profile.following}</div>
                 <div className="text-xs text-gray-400">Following</div>
@@ -227,48 +224,36 @@ const Profile = () => {
           <h1 className="text-2xl mb-4 font-semibold">Your Posts</h1>
 
           {posts.length > 0 ? (
-            posts.map((post, index) => (
-              <div key={index} className="bg-[#222] rounded-2xl p-4 mb-6 shadow-lg">
+            posts.map((post) => (
+              <div key={post._id} className="bg-[#222] rounded-2xl p-4 mb-6 shadow-lg">
 
-                {/* USER INFO ON POST */}
+                {/* USER HEADER */}
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-yellow-400">
-                    <img
-                      // src={profile.profilepic}
-                      src = "https://i.pravatar.cc/300"
-                      alt="mypic"
-                      className="w-full h-full object-cover"
-                    />
+                    <img src="https://i.pravatar.cc/300" className="w-full h-full object-cover" />
                   </div>
                   <div className="text-lg font-semibold">{profile.username}</div>
                 </div>
 
-                {/* DESCRIPTION */}
+                {/* POST TEXT */}
                 <div className="font-semibold mb-2">{post.description}</div>
 
-                {/* IMAGE */}
+                {/* POST IMAGE */}
                 <div className="w-full h-72 rounded-xl overflow-hidden bg-black">
                   {post.image ? (
-                    <img
-                      src={post.image}
-                      alt="post"
-                      className="w-full h-full object-cover"
-                    />
+                    <img src={post.image} className="w-full h-full object-cover" />
                   ) : (
-                    <div className="text-center py-10 text-gray-400">
-                      No image available
-                    </div>
+                    <div className="text-center py-10 text-gray-400">No image available</div>
                   )}
                 </div>
 
-                {/* LIKE + COMMENT */}
+                {/* LIKE + COMMENTS */}
                 <div className="flex items-center mt-3 gap-6">
                   <div className="flex items-center gap-2 cursor-pointer">
                     <img
                       src={Like}
-                      alt="like"
-                      className="w-6 h-6 cursor-pointer"
-                      onClick={async () => await handlelike(post)}
+                      className="w-6 h-6"
+                      onClick={() => handlelike(post)}
                     />
                     {post.likes.length}
                   </div>
@@ -277,14 +262,14 @@ const Profile = () => {
                     className="flex items-center gap-2 cursor-pointer"
                     onClick={() => handleCommentClick(post._id)}
                   >
-                    <img src={commentss} className="w-6 h-6" alt="comments" />
+                    <img src={commentss} className="w-6 h-6" />
                     {post.comments.length}
                   </div>
                 </div>
 
                 {/* COMMENT INPUT */}
                 {activePostId === post._id && (
-                  <div className="mt-4 flex gap-2 comment-input-animate">
+                  <div className="mt-4 flex gap-2 animate-[fadeIn_.3s_ease]">
                     <input
                       placeholder="Write a comment..."
                       onChange={(e) => setcomtext({ text: e.target.value })}
@@ -298,6 +283,64 @@ const Profile = () => {
                     </button>
                   </div>
                 )}
+
+                {/* MOBILE COMMENTS */}
+                {isMobile && activePostId === post._id && (
+                  <div className="mt-5 bg-[#1c1c1c] p-4 rounded-xl animate-[slideDown_.35s_ease]">
+
+                    {com.length === 0 && (
+                      <div className="text-gray-400 text-center">No comments yet</div>
+                    )}
+
+                    {com.map((c, idx) => (
+                      <div key={c._id} className="mb-4 bg-[#252525] p-3 rounded-lg">
+
+                        <div className="font-semibold">{comusers.usernames[idx]}</div>
+                        <div className="text-gray-300 mt-1">{c.text}</div>
+
+                        {/* REPLIES (mobile SHOW ALWAYS) */}
+                        <div className="mt-3 pl-3 border-l-2 border-yellow-400">
+
+                          {visible === c._id &&
+                            replies.map((r, i) => (
+                              <div key={i} className="text-sm text-gray-300 mb-2 animate-[fadeIn_.3s]">
+                                <span className="font-semibold">
+                                  {replyusers.usernames[i]}:
+                                </span>{" "}
+                                {r.text}
+                              </div>
+                            ))}
+
+                          <button
+                            className="text-yellow-300 text-xs mt-1"
+                            onClick={() => handlereply(c._id)}
+                          >
+                            {visible === c._id ? "Hide replies" : "View replies"}
+                          </button>
+                        </div>
+
+                        {/* REPLY INPUT */}
+                        <div className="mt-3 flex gap-2">
+                          <input
+                            ref={inputRef}
+                            placeholder="Reply..."
+                            className="flex-1 bg-[#333] px-3 py-2 rounded-lg border border-white/10"
+                            onChange={(e) =>
+                              setreplytext({ text: e.target.value })
+                            }
+                          />
+                          <button
+                            className="bg-yellow-400 text-black px-3 py-1 rounded-lg"
+                            onClick={() => Submitreply(c._id)}
+                          >
+                            Send
+                          </button>
+                        </div>
+
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             ))
           ) : (
@@ -307,27 +350,22 @@ const Profile = () => {
           )}
         </div>
 
-        {/* RIGHT COMMENT PANEL */}
-        <div className="col-span-12 md:col-span-3">
-          <div className="bg-[#222] rounded-2xl p-5 shadow-lg sticky top-24 h-fit comment-panel-animate">
+        {/* DESKTOP COMMENT PANEL */}
+        {!isMobile && (
+          <div className="col-span-12 md:col-span-3">
+            <div className="bg-[#222] rounded-2xl p-5 shadow-lg sticky top-24 h-fit">
 
-            {!activePostId ? (
-              <div className="text-gray-400 text-center">
-                Select a post to view comments
-              </div>
-            ) : (
-              <div>
-               <div className="comment-panel-animate">
-                <div className="text-lg font-semibold mb-3">
-                  Comments on {profile.username}'s post
-                </div>
-                </div>
+              {!activePostId ? (
+                <div className="text-gray-400 text-center">Select a post to view comments</div>
+              ) : (
+                <>
+                  <div className="text-lg font-semibold mb-4">
+                    Comments on {profile.username}'s post
+                  </div>
 
-                {com.length > 0 ? (
-                  <div className="space-y-4">
-                    {com.map((comment, idx) => (
-                      <div key={idx} className="bg-[#1b1b1b] p-3 rounded-xl comment-card-animate">
-
+                  {com.length > 0 ? (
+                    com.map((comment, idx) => (
+                      <div key={comment._id} className="bg-[#1b1b1b] p-3 rounded-xl mb-3">
                         <div className="font-semibold">
                           {comusers.usernames[idx]}
                           <button
@@ -338,18 +376,17 @@ const Profile = () => {
                           </button>
                         </div>
 
-                        <div className="text-gray-300 mt-1">{comment.text}</div>
+                        <div className="text-gray-300">{comment.text}</div>
 
-                        {/* Replies */}
                         {visible === comment._id && (
-                          <div className="mt-3 pl-3 border-l-2 border-yellow-400">
+                          <div className="mt-2 pl-3 border-l border-yellow-400">
                             {replies.length > 0 ? (
-                              replies.map((reply, index) => (
-                                <div key={index} className="text-sm text-gray-300 mb-2 reply-item-animate">
+                              replies.map((r, i) => (
+                                <div key={i} className="text-sm text-gray-300">
                                   <span className="font-semibold">
-                                    {replyusers.usernames[index]}:
+                                    {replyusers.usernames[i]}:
                                   </span>{" "}
-                                  {reply.text}
+                                  {r.text}
                                 </div>
                               ))
                             ) : (
@@ -358,13 +395,14 @@ const Profile = () => {
                           </div>
                         )}
 
-                        {/* Reply input */}
-                        <div className="mt-3 flex gap-2">
+                        <div className="mt-2 flex gap-2">
                           <input
                             ref={inputRef}
                             placeholder="Reply..."
-                            className="flex-1 bg-[#333] px-3 py-2 rounded-lg outline-none border border-white/10"
-                            onChange={(e) => setreplytext({ text: e.target.value })}
+                            className="flex-1 bg-[#333] px-3 py-2 rounded-lg"
+                            onChange={(e) =>
+                              setreplytext({ text: e.target.value })
+                            }
                           />
                           <button
                             className="bg-yellow-400 text-black px-3 py-1 rounded-lg"
@@ -373,20 +411,31 @@ const Profile = () => {
                             Send
                           </button>
                         </div>
-
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-gray-400">No comments yet</div>
-                )}
-              </div>
-            )}
-
+                    ))
+                  ) : (
+                    <div className="text-gray-400">No comments yet</div>
+                  )}
+                </>
+              )}
+            </div>
           </div>
-        </div>
-
+        )}
       </div>
+
+      {/* SMOOTH ANIMATIONS */}
+      <style>
+        {`
+          @keyframes slideDown {
+            0% { opacity: 0; transform: translateY(-10px); }
+            100% { opacity: 1; transform: translateY(0px); }
+          }
+          @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+          }
+        `}
+      </style>
     </div>
   );
 };

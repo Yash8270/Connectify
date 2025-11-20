@@ -52,24 +52,35 @@ const Api = (props) => {
     
       },[]);
 
-      useEffect(() => {
-        const pending = async () => {
+     useEffect(() => {
+
+    if (!authdata?.authtoken || !authdata?.userid) {
+        // User not logged in → don't call selfreq
+        return;
+    }
+
+    const pending = async () => {
+        try {
             const response = await fetch(`${host}/api/follow/selfreq`,{
                 method: 'GET',
-                headers: {
-                    'Content-Type':'application/json'
-                },
+                headers: { 'Content-Type':'application/json' },
                 credentials:'include'
             });
+
+            if (!response.ok) return;  // prevent crash on 401
+
             const json = await response.json();
             setfollowreq(json);
-             setnfollow(json.length);
-             console.log(json);
+            setnfollow(json.length);
+        } catch (e) {
+            console.log("selfreq error:", e.message);
         }
+    };
 
-       pending();
-       
-      },[authdata]);
+    pending();
+
+}, [authdata]);
+
 
 
     // console.log("The cookie: ",authdata);
