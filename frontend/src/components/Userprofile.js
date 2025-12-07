@@ -68,7 +68,7 @@ const Userprofile = () => {
   const loadUserInfo = async () => {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/auth/userinfo/${userid}`,
+        `https://connectify-aml7.onrender.com/api/auth/userinfo/${userid}`,
         {
           method: "GET",
           credentials: "include",

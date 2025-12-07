@@ -4,10 +4,10 @@ import Connect_Context from './Connectcontext';
 import Cookies from 'js-cookie';
 import {io} from 'socket.io-client';
 
-const socket = io('http://localhost:5000');
+const socket = io('https://connectify-aml7.onrender.com');
 
 const Api = (props) => {
-    const host  = "http://localhost:5000";
+    const host  = "https://connectify-aml7.onrender.com";
     const [authdata,setauthdata] = useState({authtoken: Cookies.get('auth-token'), userid: Cookies.get('userid')});
       const [searchuser, setsearchuser] = useState([]);
       const [followname, setfollowname] = useState('');
