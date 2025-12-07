@@ -150,5 +150,5 @@ io.on('connection', (socket) => {
 });
 
 
-
+console.log("Frontend added to cors");
 server.listen(5000, () => console.log("Server running on 5000"));
