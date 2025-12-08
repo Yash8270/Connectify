@@ -34,7 +34,6 @@ const Login = () => {
     password: "",
   });
 
-  // password visibility toggles
   const [showLoginPass, setShowLoginPass] = useState(false);
   const [showSignPass, setShowSignPass] = useState(false);
   const [showSignConfPass, setShowSignConfPass] = useState(false);
@@ -53,9 +52,10 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex justify-center items-center bg-gradient-to-r from-brandDark to-brandGrey2 text-white px-4 pt-20">
+    // ✅ PERFECT FIX: subtract navbar height → NO scrollbar
+    <div className="h-[calc(100vh-5rem)] overflow-hidden flex justify-center items-center bg-[#0f0f0f] text-white px-4">
 
-      <div className="relative w-full max-w-4xl bg-brandGrey rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row transition-all duration-700">
+      <div className="relative w-full max-w-4xl bg-[#1a1a1a] rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row transition-all duration-700 border border-white/10">
 
         {/* LOGIN FORM */}
         <div className="flex-1 p-8">
@@ -64,18 +64,17 @@ const Login = () => {
             <label className="font-semibold">Username</label>
             <input
               type="text"
-              className="p-3 rounded bg-brandGrey2 border border-gray-600"
+              className="p-3 rounded bg-[#111] border border-white/10"
               onChange={(e) =>
                 setlogindata({ ...logindata, username: e.target.value })
               }
             />
 
-            {/* PASSWORD with eye */}
             <label className="font-semibold">Password</label>
             <div className="relative">
               <input
                 type={showLoginPass ? "text" : "password"}
-                className="p-3 rounded w-full bg-brandGrey2 border border-gray-600"
+                className="p-3 rounded w-full bg-[#111] border border-white/10"
                 onChange={(e) =>
                   setlogindata({ ...logindata, password: e.target.value })
                 }
@@ -90,7 +89,7 @@ const Login = () => {
             </div>
 
             <button
-              className="bg-brandYellow text-black p-3 rounded font-bold hover:opacity-90"
+              className="bg-yellow-400 text-black p-3 rounded font-bold hover:opacity-90"
               onClick={handlelogin}
             >
               Login
@@ -98,14 +97,14 @@ const Login = () => {
           </form>
         </div>
 
-        {/* SIGN-IN FORM */}
+        {/* SIGN-UP FORM */}
         <div className="flex-1 p-8">
           <form className="flex flex-col gap-4">
 
             <label className="font-semibold">New Username</label>
             <input
               type="text"
-              className="p-3 rounded bg-brandGrey2 border border-gray-600"
+              className="p-3 rounded bg-[#111] border border-white/10"
               onChange={(e) =>
                 setsigndata({ ...signdata, username: e.target.value })
               }
@@ -114,18 +113,17 @@ const Login = () => {
             <label className="font-semibold">Email-ID</label>
             <input
               type="email"
-              className="p-3 rounded bg-brandGrey2 border border-gray-600"
+              className="p-3 rounded bg-[#111] border border-white/10"
               onChange={(e) =>
                 setsigndata({ ...signdata, email: e.target.value })
               }
             />
 
-            {/* SIGNUP PASSWORD + eye */}
             <label className="font-semibold">Password</label>
             <div className="relative">
               <input
                 type={showSignPass ? "text" : "password"}
-                className="p-3 rounded w-full bg-brandGrey2 border border-gray-600"
+                className="p-3 rounded w-full bg-[#111] border border-white/10"
                 onChange={(e) =>
                   setsigndata({ ...signdata, password: e.target.value })
                 }
@@ -139,12 +137,11 @@ const Login = () => {
               </button>
             </div>
 
-            {/* SIGNUP CONFIRM PASSWORD + eye */}
             <label className="font-semibold">Confirm Password</label>
             <div className="relative">
               <input
                 type={showSignConfPass ? "text" : "password"}
-                className="p-3 rounded w-full bg-brandGrey2 border border-gray-600"
+                className="p-3 rounded w-full bg-[#111] border border-white/10"
                 onChange={(e) =>
                   setsigndata({ ...signdata, confpassword: e.target.value })
                 }
@@ -159,7 +156,7 @@ const Login = () => {
             </div>
 
             <button
-              className="bg-brandYellow text-black p-3 rounded font-bold hover:opacity-90"
+              className="bg-yellow-400 text-black p-3 rounded font-bold hover:opacity-90"
               onClick={handlesignin}
             >
               Sign-In
@@ -167,9 +164,9 @@ const Login = () => {
           </form>
         </div>
 
-        {/* YELLOW SLIDING PANEL (now softer yellow) */}
+        {/* SLIDING PANEL */}
         <div
-          className={`absolute top-0 h-full w-1/2 bg-brandYellow text-black flex flex-col items-center justify-center text-center px-6 transition-position duration-700 ${
+          className={`absolute top-0 h-full w-1/2 bg-yellow-400 text-black flex flex-col items-center justify-center text-center px-6 transition-all duration-700 ${
             position === "right"
               ? "right-0 rounded-l-2xl"
               : "left-0 rounded-r-2xl"
