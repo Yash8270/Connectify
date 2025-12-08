@@ -214,11 +214,15 @@ const Userprofile = () => {
   }, [profile.username, fstatus]);
 
   return (
-    <div className="min-h-screen bg-[#151515] pt-24 px-4 md:px-10 pb-10 text-white">
+    // ✅ FIXED: Added -mt-20 to pull background up, pt-20 to push content down
+    // ✅ FIXED: Background #0f0f0f
+    <div className="min-h-screen bg-[#0f0f0f] -mt-20 pt-20 px-4 md:px-10 pb-10 text-white">
+      
       <div className="grid grid-cols-12 gap-6 max-w-[1600px] mx-auto">
         {/* LEFT PROFILE CARD */}
         <div className="col-span-12 md:col-span-3">
-          <div className="bg-[#222] p-6 rounded-2xl shadow-lg sticky top-24">
+          {/* ✅ FIXED: bg-[#1a1a1a] border border-white/10 */}
+          <div className="bg-[#1a1a1a] p-6 rounded-2xl border border-white/10 sticky top-24">
             <div className="flex flex-col items-center">
               <div className="w-28 h-28 rounded-full overflow-hidden ring-4 ring-yellow-400">
                 <img
@@ -237,17 +241,17 @@ const Userprofile = () => {
 
               <div className="flex gap-3 mt-4 w-full">
                 <button
-                  className={`flex-1 py-2 rounded-full font-semibold ${
+                  className={`flex-1 py-2 rounded-full font-semibold transition ${
                     fstatus === "Following"
-                      ? "bg-gray-700 border border-white/20"
-                      : "bg-yellow-400 text-black"
+                      ? "bg-gray-700 border border-white/20 text-white"
+                      : "bg-yellow-400 text-black hover:bg-yellow-300"
                   }`}
                   onClick={handleFollowRequest}
                 >
                   {fstatus}
                 </button>
 
-                <button className="py-2 px-4 rounded-full bg-[#333]">Message</button>
+                <button className="py-2 px-4 rounded-full bg-[#333] hover:bg-[#444] border border-white/10 transition">Message</button>
               </div>
             </div>
 
@@ -277,7 +281,7 @@ const Userprofile = () => {
               <div className="flex flex-wrap gap-2">
                 {profile.skills.length > 0 ? (
                   profile.skills.map((s, i) => (
-                    <span key={i} className="bg-[#333] px-3 py-1 rounded-md text-sm">
+                    <span key={i} className="bg-[#262626] px-3 py-1 rounded-md text-sm border border-white/5">
                       {s}
                     </span>
                   ))
@@ -295,12 +299,13 @@ const Userprofile = () => {
 
           {/* IF NOT FOLLOWING */}
           {fstatus !== "Following" ? (
-            <div className="bg-[#222] p-8 text-center rounded-2xl text-gray-300">
+            <div className="bg-[#1a1a1a] p-8 text-center rounded-2xl text-gray-400 border border-white/10">
               Follow {profile.username} to see their posts
             </div>
           ) : posts.length > 0 ? (
             posts.map((post, index) => (
-              <div key={index} className="bg-[#222] rounded-2xl p-4 mb-6 shadow-lg">
+              // ✅ FIXED: bg-[#1a1a1a] and border
+              <div key={index} className="bg-[#1a1a1a] rounded-2xl p-4 mb-6 border border-white/10">
                 {/* USER HEADER ABOVE EVERY POST */}
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-yellow-400">
@@ -315,32 +320,32 @@ const Userprofile = () => {
                 </div>
 
                 {/* DESCRIPTION */}
-                <div className="font-semibold mb-2">{post.description}</div>
+                <div className="font-semibold mb-2 text-gray-200">{post.description}</div>
 
                 {/* IMAGE */}
-                <div className="w-full h-72 bg-black rounded-xl overflow-hidden">
+                <div className="w-full rounded-xl overflow-hidden">
                   {post.image ? (
-                    <img src={post.image} className="w-full h-full object-cover" alt="" />
+                    <img src={post.image} className="w-full object-cover max-h-[66vh] border border-black/40" alt="" />
                   ) : (
-                    <div className="text-gray-400 py-10 text-center">No Image</div>
+                    <div className="text-gray-400 py-10 text-center bg-black/20">No Image</div>
                   )}
                 </div>
 
                 {/* LIKE + COMMENT */}
                 <div className="flex items-center mt-3 gap-6">
                   <div
-                    className="flex items-center gap-2 cursor-pointer"
+                    className="flex items-center gap-2 cursor-pointer text-sm"
                     onClick={() => handleLike(post)}
                   >
-                    <img src={Like} alt="" className="w-6 h-6" />
+                    <img src={Like} alt="" className="w-5 h-5" />
                     {post.likes.length}
                   </div>
 
                   <div
-                    className="flex items-center gap-2 cursor-pointer"
+                    className="flex items-center gap-2 cursor-pointer text-sm"
                     onClick={() => handleCommentClick(post._id)}
                   >
-                    <img src={commentss} alt="" className="w-6 h-6" />
+                    <img src={commentss} alt="" className="w-5 h-5" />
                     {post.comments.length}
                   </div>
                 </div>
@@ -351,11 +356,11 @@ const Userprofile = () => {
                     <input
                       placeholder="Write a comment..."
                       onChange={(e) => setComText({ text: e.target.value })}
-                      className="flex-1 bg-[#333] px-3 py-2 rounded-lg border border-white/10"
+                      className="flex-1 bg-[#111] px-4 py-2 rounded-full border border-white/10 focus:outline-none focus:border-yellow-400"
                     />
                     <button
                       onClick={() => SubmitComment(post._id)}
-                      className="bg-yellow-400 text-black px-4 py-2 rounded-lg"
+                      className="bg-yellow-400 text-black px-4 py-2 rounded-full font-semibold hover:opacity-90"
                     >
                       Send
                     </button>
@@ -364,7 +369,7 @@ const Userprofile = () => {
               </div>
             ))
           ) : (
-            <div className="bg-[#222] p-8 text-center rounded-2xl text-gray-300">
+            <div className="bg-[#1a1a1a] p-8 text-center rounded-2xl text-gray-400 border border-white/10">
               {postMessage}
             </div>
           )}
@@ -373,25 +378,26 @@ const Userprofile = () => {
         {/* RIGHT COMMENT PANEL */}
         {fstatus === "Following" && (
           <div className="col-span-12 md:col-span-3">
-            <div className="bg-[#222] rounded-2xl p-5 shadow-lg sticky top-24 h-fit">
+            {/* ✅ FIXED: bg-[#1a1a1a] */}
+            <div className="bg-[#1a1a1a] rounded-2xl p-5 border border-white/10 sticky top-24 h-fit">
               {!activePostId ? (
                 <div className="text-gray-400 text-center">
                   Select a post to view comments
                 </div>
               ) : (
                 <>
-                  <div className="text-lg font-semibold mb-3">
+                  <div className="text-lg font-semibold mb-3 text-gray-300">
                     Comments on {profile.username}'s post
                   </div>
 
                   {com.length > 0 ? (
                     com.map((comment, idx) => (
-                      <div key={idx} className="bg-[#1b1b1b] p-3 mb-3 rounded-xl">
-                        <div className="font-semibold">{comusers.usernames[idx]}</div>
-                        <div className="text-gray-300 mt-1">{comment.text}</div>
+                      <div key={idx} className="bg-[#111] p-3 mb-3 rounded-xl border border-white/5">
+                        <div className="font-semibold text-gray-200">{comusers.usernames[idx]}</div>
+                        <div className="text-gray-400 mt-1 text-sm">{comment.text}</div>
 
                         <button
-                          className="mt-2 text-yellow-300 text-xs"
+                          className="mt-2 text-yellow-400 text-xs font-medium"
                           onClick={() => handleReplyClick(comment._id)}
                         >
                           Show replies
@@ -400,8 +406,8 @@ const Userprofile = () => {
                         {visible === comment._id && (
                           <div className="mt-3 border-l-2 border-yellow-400 pl-3">
                             {replies.map((reply, i) => (
-                              <p key={i} className="text-gray-300 text-sm">
-                                <b>{replyusers.usernames[i]}</b>: {reply.text}
+                              <p key={i} className="text-gray-300 text-sm mb-1">
+                                <b className="text-gray-100">{replyusers.usernames[i]}</b>: {reply.text}
                               </p>
                             ))}
                           </div>
@@ -411,12 +417,12 @@ const Userprofile = () => {
                           <input
                             ref={inputRef}
                             placeholder="Reply..."
-                            className="bg-[#333] px-3 py-2 flex-1 rounded-lg border border-white/10"
+                            className="bg-[#000] px-3 py-2 flex-1 rounded-lg border border-white/10 text-sm focus:outline-none focus:border-yellow-400"
                             onChange={(e) => setReplyText({ text: e.target.value })}
                           />
 
                           <button
-                            className="bg-yellow-400 px-3 py-1 rounded-lg text-black"
+                            className="bg-yellow-400 px-3 py-1 rounded-lg text-black text-sm font-semibold"
                             onClick={() => SubmitReply(comment._id)}
                           >
                             Send

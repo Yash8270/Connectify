@@ -43,7 +43,8 @@ const Shownav = () => {
   }, [followreq, idtouser]);
 
   useEffect(() => {
-    if (socket && authdata?.userid) socket.emit("registerUser", authdata.userid);
+    if (socket && authdata?.userid)
+      socket.emit("registerUser", authdata.userid);
   }, [socket, authdata?.userid]);
 
   useEffect(() => {
@@ -87,53 +88,49 @@ const Shownav = () => {
 
   return (
     <>
-      {/* NAVBAR */}
-      <header className="fixed top-0 left-0 w-full bg-brandGrey z-50 shadow">
-  <div className="max-w-[1600px] mx-auto px-6 py-3 flex items-center gap-6">
+      {/* ✅ FIXED BLACK NAVBAR */}
+      <header className="fixed top-0 left-0 w-full bg-[#0f0f0f] z-50 border-b border-white/10">
+        <div className="max-w-[1600px] mx-auto px-6 py-3 flex items-center gap-6">
 
-    {/* LEFT TEXT */}
-    <div className="min-w-[160px] shrink-0">
-      <div className="text-lg font-semibold text-white whitespace-nowrap">
-        Welcome {Cookies.get("username")}
-      </div>
-    </div>
+          {/* LEFT TEXT */}
+          <div className="min-w-[160px] shrink-0 text-white font-semibold">
+            Welcome {Cookies.get("username")}
+          </div>
 
-    {/* SEARCH (FIXED: EXPANDS FULL WIDTH) */}
-    <div className="flex flex-grow justify-center min-w-0">
-      <div className="relative w-full max-w-[680px]">
-        <input
-          id="searchuser"
-          value={query}
-          onChange={handleInputChange}
-          className="w-full bg-brandGrey2 placeholder-gray-400 text-white rounded-full py-2.5 px-4 border border-transparent focus:outline-none focus:ring-2 focus:ring-brandYellow transition"
-          placeholder="Search users"
-        />
+          {/* SEARCH */}
+          <div className="flex flex-grow justify-center min-w-0">
+            <div className="relative w-full max-w-[680px]">
+              <input
+                id="searchuser"
+                value={query}
+                onChange={handleInputChange}
+                className="w-full bg-[#1a1a1a] placeholder-gray-400 text-white rounded-full py-2.5 px-4 border border-white/10 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition"
+                placeholder="Search users"
+              />
 
-        {suggestions.length > 0 && (
-          <ul className="absolute left-0 right-0 mt-2 bg-brandGrey2 rounded-lg shadow-md max-h-56 overflow-auto z-50">
-            {suggestions.map((user, idx) => (
-              <li
-                key={idx}
-                onClick={() => handleUserClick(user)}
-                className="px-4 py-2 hover:bg-brandGrey cursor-pointer text-white"
-              >
-                {user.username || "No username"}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-    </div>
+              {suggestions.length > 0 && (
+                <ul className="absolute left-0 right-0 mt-2 bg-[#1a1a1a] rounded-lg shadow-md max-h-56 overflow-auto z-50 border border-white/10">
+                  {suggestions.map((user, idx) => (
+                    <li
+                      key={idx}
+                      onClick={() => handleUserClick(user)}
+                      className="px-4 py-2 hover:bg-[#252525] cursor-pointer text-white"
+                    >
+                      {user.username || "No username"}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
 
-    {/* RIGHT BUTTONS (FIXED: NO SHRINKING INTO SEARCH) */}
-    <div className="flex items-center gap-4 shrink-0">
-      {/* (post / back / logout / request / chat / menu buttons remain the same) */}
-
+          {/* RIGHT BUTTONS */}
+          <div className="flex items-center gap-4 shrink-0">
 
             {/* DESKTOP: POST */}
             <button
               onClick={togglePostModal}
-              className="hidden md:flex bg-brandYellow text-black px-4 py-2 rounded-lg font-semibold hover:opacity-90 transition"
+              className="hidden md:flex bg-yellow-400 text-black px-4 py-2 rounded-lg font-semibold hover:opacity-90 transition"
             >
               Post
             </button>
@@ -141,7 +138,7 @@ const Shownav = () => {
             {/* DESKTOP: BACK */}
             <Link
               to={`/showcase/${authdata?.userid}`}
-              className="hidden md:flex bg-brandGrey2 text-white px-4 py-2 rounded-lg hover:bg-brandGrey transition"
+              className="hidden md:flex bg-[#1a1a1a] text-white px-4 py-2 rounded-lg hover:bg-[#232323] transition"
             >
               Back
             </Link>
@@ -149,7 +146,7 @@ const Shownav = () => {
             {/* DESKTOP: LOGOUT */}
             <button
               onClick={handleCookie}
-              className="hidden md:flex border border-brandYellow text-brandYellow px-4 py-2 rounded-lg hover:bg-brandYellow hover:text-black transition font-semibold"
+              className="hidden md:flex border border-yellow-400 text-yellow-400 px-4 py-2 rounded-lg hover:bg-yellow-400 hover:text-black transition font-semibold"
             >
               Logout
             </button>
@@ -158,12 +155,12 @@ const Shownav = () => {
             <div className="relative">
               <button
                 onClick={toggleReqModal}
-                className="w-10 h-10 rounded-full bg-brandGrey2 flex items-center justify-center"
+                className="w-10 h-10 rounded-full bg-[#1a1a1a] flex items-center justify-center"
               >
                 <img src={Request} alt="req" className="w-5 h-5" />
               </button>
               {nfollow > 0 && (
-                <span className="absolute -top-1 -right-1 bg-brandYellow text-black w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold">
+                <span className="absolute -top-1 -right-1 bg-yellow-400 text-black w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold">
                   {nfollow}
                 </span>
               )}
@@ -172,12 +169,12 @@ const Shownav = () => {
             {/* CHAT */}
             <div className="relative">
               <Link to={`/chat/${authdata?.userid}`}>
-                <div className="w-10 h-10 rounded-full bg-brandGrey2 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full bg-[#1a1a1a] flex items-center justify-center">
                   <img src={chat} alt="chat" className="w-5 h-5" />
                 </div>
               </Link>
               {nchat > 0 && (
-                <span className="absolute -top-1 -right-1 bg-brandYellow text-black w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold">
+                <span className="absolute -top-1 -right-1 bg-yellow-400 text-black w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold">
                   {nchat}
                 </span>
               )}
@@ -194,15 +191,20 @@ const Shownav = () => {
         </div>
       </header>
 
-      {/* MOBILE SIDEBAR */}
+      {/* ✅ GLOBAL NAVBAR SPACER */}
+      <div className="h-20"></div>
+
+      {/* ✅ MOBILE SIDEBAR */}
       <div
-        className={`fixed top-0 right-0 h-full w-64 bg-brandGrey2 text-white transform transition-transform duration-300 z-40 ${
+        className={`fixed top-0 right-0 h-full w-64 bg-[#0f0f0f] text-white transform transition-transform duration-300 z-40 ${
           sidebarOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
-        <div className="p-4 flex items-center justify-between">
+        <div className="p-4 flex items-center justify-between border-b border-white/10">
           <div className="font-bold text-lg">Menu</div>
-          <button onClick={closeSidebar} className="text-2xl">&times;</button>
+          <button onClick={closeSidebar} className="text-2xl">
+            &times;
+          </button>
         </div>
 
         <div className="flex flex-col gap-4 p-4">
@@ -213,7 +215,7 @@ const Shownav = () => {
               togglePostModal();
               closeSidebar();
             }}
-            className="w-full text-center bg-brandYellow text-black py-2 rounded-lg font-semibold hover:opacity-90"
+            className="w-full text-center bg-yellow-400 text-black py-2 rounded-lg font-semibold hover:opacity-90"
           >
             Post
           </button>
@@ -222,7 +224,7 @@ const Shownav = () => {
           <Link
             to={`/showcase/${authdata?.userid}`}
             onClick={closeSidebar}
-            className="w-full text-center bg-brandGrey hover:bg-brandGrey/80 py-2 rounded-lg font-semibold text-white"
+            className="w-full text-center bg-[#1a1a1a] hover:bg-[#232323] py-2 rounded-lg font-semibold text-white"
           >
             Back
           </Link>
@@ -230,11 +232,10 @@ const Shownav = () => {
           {/* MOBILE: LOGOUT */}
           <button
             onClick={handleCookie}
-            className="w-full text-center py-2 rounded-lg font-semibold border border-brandYellow text-brandYellow hover:bg-brandYellow hover:text-black"
+            className="w-full text-center py-2 rounded-lg font-semibold border border-yellow-400 text-yellow-400 hover:bg-yellow-400 hover:text-black"
           >
             Logout
           </button>
-
         </div>
       </div>
 

@@ -45,13 +45,15 @@ const Chat = () => {
   };
 
   return (
-    <div className="min-h-screen pt-[11vh] bg-[#151515] px-4 md:px-10 pb-6 flex gap-6">
+    // ✅ FIXED: Added -mt-20 to hide white gap, pt-24 to push content down correct amount
+    // ✅ FIXED: Updated background to #0f0f0f to match other pages
+    <div className="min-h-screen bg-[#0f0f0f] -mt-20 pt-28 px-4 md:px-10 pb-6 flex gap-6 text-white">
 
       {/* LEFT SIDEBAR */}
-      <div className="w-[280px] hidden md:flex flex-col bg-[#222] rounded-xl shadow-xl overflow-hidden border border-white/5">
+      <div className="w-[280px] hidden md:flex flex-col bg-[#1a1a1a] rounded-xl overflow-hidden border border-white/10 h-[80vh]">
 
         {/* Search Bar */}
-        <div className="p-4 bg-[#252525] border-b border-white/5">
+        <div className="p-4 bg-[#1a1a1a] border-b border-white/10">
           <div className="relative">
             <IoSearch className="absolute left-3 top-3 text-gray-400 text-xl" />
             <input
@@ -61,7 +63,7 @@ const Chat = () => {
                 searchuserchat(e.target.value);
               }}
               placeholder="Search chat"
-              className="w-full bg-[#333] rounded-lg pl-10 pr-3 py-2 text-sm text-gray-200 placeholder-gray-400 border border-white/10 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+              className="w-full bg-[#111] rounded-lg pl-10 pr-3 py-2 text-sm text-gray-200 placeholder-gray-400 border border-white/10 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition"
             />
           </div>
 
@@ -86,20 +88,20 @@ const Chat = () => {
         </div>
 
         {/* USER LIST */}
-        <div className="flex-1 overflow-y-auto p-3 space-y-2">
+        <div className="flex-1 overflow-y-auto p-3 space-y-2 scrollbar-thin scrollbar-thumb-gray-700">
           {alluser?.map((u, i) => (
             <div
               key={i}
               className={`p-3 rounded-lg flex items-center gap-3 cursor-pointer transition 
-              ${selectedUser?._id === u._id ? "bg-yellow-500/20" : "hover:bg-white/10"}`}
+              ${selectedUser?._id === u._id ? "bg-yellow-500/20 border border-yellow-500/30" : "hover:bg-white/5 border border-transparent"}`}
               onClick={() => handleUserClick(u)}
             >
               <img
                 src={u.profilepic}
                 alt=""
-                className="w-12 h-12 rounded-full object-cover border-2 border-yellow-400"
+                className="w-10 h-10 rounded-full object-cover ring-2 ring-yellow-400/50"
               />
-              <div className="flex-1 text-white">{u.username}</div>
+              <div className="flex-1 text-sm font-medium text-gray-200">{u.username}</div>
 
               <div className="relative">
                 <button
@@ -107,14 +109,14 @@ const Chat = () => {
                     e.stopPropagation();
                     setDropdownOpen(dropdownOpen === i ? null : i);
                   }}
-                  className="text-gray-300 text-xl"
+                  className="text-gray-400 hover:text-white transition"
                 >
                   <IoEllipsisVertical />
                 </button>
 
                 {dropdownOpen === i && (
                   <div className="absolute right-0 mt-2 bg-[#111] border border-white/10 rounded-lg shadow-lg w-36 z-20">
-                    <button className="block w-full text-left px-3 py-2 text-gray-200 hover:bg-yellow-500/20">
+                    <button className="block w-full text-left px-3 py-2 text-red-400 hover:bg-red-500/10 text-sm">
                       Delete chat
                     </button>
                   </div>
@@ -127,17 +129,20 @@ const Chat = () => {
       </div>
 
       {/* CHAT AREA */}
-      <div className="flex-1 bg-[#1a1a1a] rounded-xl border border-white/5 shadow-xl flex flex-col">
+      <div className="flex-1 bg-[#1a1a1a] rounded-xl border border-white/10 flex flex-col h-[80vh]">
 
         {/* TOP BAR */}
-        <div className="px-5 py-4 bg-[#222] border-b border-white/10 flex items-center justify-between">
-          <div className="text-white font-semibold text-lg">
-            {selectedUser ? selectedUser.username : "Select a user"}
+        <div className="px-6 py-4 bg-[#1a1a1a] border-b border-white/10 flex items-center justify-between rounded-t-xl">
+          <div className="text-white font-semibold text-lg flex items-center gap-3">
+             {selectedUser && (
+                <img src={selectedUser.profilepic} className="w-8 h-8 rounded-full bg-gray-700" alt="" />
+             )}
+            {selectedUser ? selectedUser.username : "Select a user to chat"}
           </div>
         </div>
 
         {/* MESSAGES */}
-        <div className="flex-1 overflow-y-auto p-5 space-y-5">
+        <div className="flex-1 overflow-y-auto p-5 space-y-4">
 
           {messages?.map((m, i) => (
             <div
@@ -145,10 +150,10 @@ const Chat = () => {
               className={`flex ${m.self ? "justify-end" : "justify-start"}`}
             >
               <div
-                className={`max-w-[70%] px-4 py-2 rounded-2xl shadow-lg text-sm 
+                className={`max-w-[70%] px-4 py-2 rounded-2xl text-sm 
                 ${m.self
-                  ? "bg-yellow-400 text-black rounded-br-none"
-                  : "bg-[#333] text-gray-200 rounded-bl-none"
+                  ? "bg-yellow-400 text-black rounded-br-none font-medium"
+                  : "bg-[#333] text-gray-200 rounded-bl-none border border-white/5"
                 }`}
               >
                 {m.text}
@@ -161,17 +166,18 @@ const Chat = () => {
 
         {/* INPUT BAR */}
         {selectedUser && (
-          <div className="p-4 bg-[#222] border-t border-white/10 flex items-center gap-3">
+          <div className="p-4 bg-[#1a1a1a] border-t border-white/10 flex items-center gap-3 rounded-b-xl">
             <input
               value={text}
               onChange={(e) => setText(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSend()}
               placeholder="Type a message..."
-              className="flex-1 bg-[#333] rounded-lg px-4 py-2 text-gray-200 border border-white/10
-              focus:outline-none focus:ring-2 focus:ring-yellow-400"
+              className="flex-1 bg-[#111] rounded-full px-5 py-3 text-gray-200 border border-white/10
+              focus:outline-none focus:ring-2 focus:ring-yellow-400 transition"
             />
             <button
               onClick={handleSend}
-              className="bg-yellow-400 hover:bg-yellow-300 text-black p-3 rounded-lg transition"
+              className="bg-yellow-400 hover:bg-yellow-300 text-black p-3 rounded-full transition shadow-lg shadow-yellow-400/20"
             >
               <FiSend className="text-xl" />
             </button>

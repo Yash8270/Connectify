@@ -29,7 +29,6 @@ const Profile = () => {
   const [isMobile, setIsMobile] = useState(false);
 
   const context = useContext(Connect_Context);
-
   const {
     authdata,
     selfpost,
@@ -44,12 +43,10 @@ const Profile = () => {
 
   const inputRef = useRef(null);
 
-  // CLEAR INPUT
   const handleClear = () => {
     if (inputRef.current) inputRef.current.value = "";
   };
 
-  // DETECT MOBILE VIEW
   useEffect(() => {
     const detect = () => setIsMobile(window.innerWidth < 768);
     detect();
@@ -57,7 +54,6 @@ const Profile = () => {
     return () => window.removeEventListener("resize", detect);
   }, []);
 
-  // LOAD PROFILE INFO FROM COOKIES
   useEffect(() => {
     setprofile({
       username: Cookies.get("username"),
@@ -71,7 +67,6 @@ const Profile = () => {
     });
   }, []);
 
-  // SUBMIT COMMENT
   const SubmitComment = async (postId) => {
     if (!comtext.text.trim()) return;
 
@@ -84,14 +79,12 @@ const Profile = () => {
     setcom(allcom);
     setcomusers(usernames);
 
-    // refresh posts
     const updated = await selfpost(authdata.authtoken);
     setposts(updated);
 
     setcomtext({ text: "" });
   };
 
-  // SUBMIT REPLY
   const Submitreply = async (comment_id) => {
     if (!replytext.text.trim()) return;
 
@@ -112,7 +105,6 @@ const Profile = () => {
     handleClear();
   };
 
-  // SHOW COMMENTS
   const handleCommentClick = async (postId) => {
     if (activePostId === postId) {
       setActivePostId(null);
@@ -130,7 +122,6 @@ const Profile = () => {
     setcomusers(usernames);
   };
 
-  // LIKE POST
   const handlelike = async (post) => {
     if (post.likes.includes(authdata.userid)) {
       await dislikepost(post._id, authdata.authtoken);
@@ -142,7 +133,6 @@ const Profile = () => {
     setposts(updated);
   };
 
-  // SHOW REPLIES
   const handlereply = async (comment_id) => {
     if (visible === comment_id) return setvisible(null);
 
@@ -155,7 +145,6 @@ const Profile = () => {
     setvisible(comment_id);
   };
 
-  // LOAD POSTS ON PAGE LOAD
   useEffect(() => {
     const load = async () => {
       const fetched = await selfpost(authdata.authtoken);
@@ -165,12 +154,14 @@ const Profile = () => {
   }, [authdata]);
 
   return (
-    <div className="min-h-screen bg-[#151515] pt-24 px-4 md:px-10 pb-10 text-white">
-      <div className="grid grid-cols-12 gap-6 max-w-[1600px] mx-auto">
+    // UPDATED: Added -mt-20 to pull bg up behind navbar spacer, and pt-20 to push content down
+    <div className="min-h-screen bg-[#0f0f0f] text-white -mt-20 pt-20">
+      
+      <div className="grid grid-cols-12 gap-6 max-w-[1600px] mx-auto px-4 md:px-10 pb-10">
 
         {/* LEFT PROFILE */}
         <div className="col-span-12 md:col-span-3">
-          <div className="bg-[#222] p-6 rounded-2xl shadow-lg sticky top-24">
+          <div className="bg-[#1a1a1a] p-6 rounded-2xl border border-white/10 sticky top-0">
 
             <div className="flex flex-col items-center">
               <div className="w-28 h-28 rounded-full overflow-hidden ring-4 ring-yellow-400">
@@ -180,12 +171,11 @@ const Profile = () => {
               <div className="mt-4 text-2xl font-semibold">{profile.username}</div>
               <div className="text-gray-400 text-sm mt-1">{profile.bio}</div>
 
-              <button className="mt-4 bg-yellow-400 text-black px-5 py-2 rounded-lg font-semibold hover:bg-yellow-300">
+              <button className="mt-4 bg-yellow-400 text-black px-5 py-2 rounded-lg font-semibold hover:opacity-90">
                 Edit Profile
               </button>
             </div>
 
-            {/* Stats */}
             <div className="mt-6 grid grid-cols-3 text-center">
               <div>
                 <div className="text-xl font-bold">{posts.length}</div>
@@ -201,13 +191,12 @@ const Profile = () => {
               </div>
             </div>
 
-            {/* Skills */}
             <div className="mt-6">
               <div className="text-lg font-semibold mb-2">Skills</div>
               <div className="flex flex-wrap gap-2">
                 {profile.skills.length > 0 ? (
                   profile.skills.map((s, idx) => (
-                    <span key={idx} className="bg-[#333] px-3 py-1 rounded-md text-sm">
+                    <span key={idx} className="bg-[#262626] px-3 py-1 rounded-md text-sm">
                       {s}
                     </span>
                   ))
@@ -225,9 +214,8 @@ const Profile = () => {
 
           {posts.length > 0 ? (
             posts.map((post) => (
-              <div key={post._id} className="bg-[#222] rounded-2xl p-4 mb-6 shadow-lg">
+              <div key={post._id} className="bg-[#1a1a1a] rounded-2xl p-4 mb-6 border border-white/10">
 
-                {/* USER HEADER */}
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-yellow-400">
                     <img src="https://i.pravatar.cc/300" className="w-full h-full object-cover" />
@@ -235,45 +223,32 @@ const Profile = () => {
                   <div className="text-lg font-semibold">{profile.username}</div>
                 </div>
 
-                {/* POST TEXT */}
                 <div className="font-semibold mb-2">{post.description}</div>
 
-                {/* POST IMAGE */}
-                <div className="w-full h-72 rounded-xl overflow-hidden bg-black">
-                  {post.image ? (
+                {post.image && (
+                  <div className="w-full h-72 rounded-xl overflow-hidden bg-black">
                     <img src={post.image} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="text-center py-10 text-gray-400">No image available</div>
-                  )}
-                </div>
+                  </div>
+                )}
 
-                {/* LIKE + COMMENTS */}
                 <div className="flex items-center mt-3 gap-6">
                   <div className="flex items-center gap-2 cursor-pointer">
-                    <img
-                      src={Like}
-                      className="w-6 h-6"
-                      onClick={() => handlelike(post)}
-                    />
+                    <img src={Like} className="w-6 h-6" onClick={() => handlelike(post)} />
                     {post.likes.length}
                   </div>
 
-                  <div
-                    className="flex items-center gap-2 cursor-pointer"
-                    onClick={() => handleCommentClick(post._id)}
-                  >
+                  <div className="flex items-center gap-2 cursor-pointer" onClick={() => handleCommentClick(post._id)}>
                     <img src={commentss} className="w-6 h-6" />
                     {post.comments.length}
                   </div>
                 </div>
 
-                {/* COMMENT INPUT */}
                 {activePostId === post._id && (
-                  <div className="mt-4 flex gap-2 animate-[fadeIn_.3s_ease]">
+                  <div className="mt-4 flex gap-2">
                     <input
                       placeholder="Write a comment..."
                       onChange={(e) => setcomtext({ text: e.target.value })}
-                      className="flex-1 bg-[#333] px-3 py-2 rounded-lg border border-white/10"
+                      className="flex-1 bg-[#111] px-3 py-2 rounded-lg border border-white/10"
                     />
                     <button
                       onClick={() => SubmitComment(post._id)}
@@ -286,24 +261,22 @@ const Profile = () => {
 
                 {/* MOBILE COMMENTS */}
                 {isMobile && activePostId === post._id && (
-                  <div className="mt-5 bg-[#1c1c1c] p-4 rounded-xl animate-[slideDown_.35s_ease]">
+                  <div className="mt-5 bg-[#111] p-4 rounded-xl">
 
                     {com.length === 0 && (
                       <div className="text-gray-400 text-center">No comments yet</div>
                     )}
 
                     {com.map((c, idx) => (
-                      <div key={c._id} className="mb-4 bg-[#252525] p-3 rounded-lg">
+                      <div key={c._id} className="mb-4 bg-[#1a1a1a] p-3 rounded-lg">
 
                         <div className="font-semibold">{comusers.usernames[idx]}</div>
                         <div className="text-gray-300 mt-1">{c.text}</div>
 
-                        {/* REPLIES (mobile SHOW ALWAYS) */}
                         <div className="mt-3 pl-3 border-l-2 border-yellow-400">
-
                           {visible === c._id &&
                             replies.map((r, i) => (
-                              <div key={i} className="text-sm text-gray-300 mb-2 animate-[fadeIn_.3s]">
+                              <div key={i} className="text-sm text-gray-300 mb-2">
                                 <span className="font-semibold">
                                   {replyusers.usernames[i]}:
                                 </span>{" "}
@@ -319,12 +292,11 @@ const Profile = () => {
                           </button>
                         </div>
 
-                        {/* REPLY INPUT */}
                         <div className="mt-3 flex gap-2">
                           <input
                             ref={inputRef}
                             placeholder="Reply..."
-                            className="flex-1 bg-[#333] px-3 py-2 rounded-lg border border-white/10"
+                            className="flex-1 bg-[#111] px-3 py-2 rounded-lg border border-white/10"
                             onChange={(e) =>
                               setreplytext({ text: e.target.value })
                             }
@@ -344,7 +316,7 @@ const Profile = () => {
               </div>
             ))
           ) : (
-            <div className="text-center text-gray-400 mt-10 bg-[#222] py-10 rounded-2xl">
+            <div className="text-center text-gray-400 mt-10 bg-[#1a1a1a] py-10 rounded-2xl border border-white/10">
               No Posts Yet
             </div>
           )}
@@ -353,7 +325,7 @@ const Profile = () => {
         {/* DESKTOP COMMENT PANEL */}
         {!isMobile && (
           <div className="col-span-12 md:col-span-3">
-            <div className="bg-[#222] rounded-2xl p-5 shadow-lg sticky top-24 h-fit">
+            <div className="bg-[#1a1a1a] rounded-2xl p-5 border border-white/10 sticky top-0 h-fit">
 
               {!activePostId ? (
                 <div className="text-gray-400 text-center">Select a post to view comments</div>
@@ -365,7 +337,7 @@ const Profile = () => {
 
                   {com.length > 0 ? (
                     com.map((comment, idx) => (
-                      <div key={comment._id} className="bg-[#1b1b1b] p-3 rounded-xl mb-3">
+                      <div key={comment._id} className="bg-[#111] p-3 rounded-xl mb-3">
                         <div className="font-semibold">
                           {comusers.usernames[idx]}
                           <button
@@ -399,7 +371,7 @@ const Profile = () => {
                           <input
                             ref={inputRef}
                             placeholder="Reply..."
-                            className="flex-1 bg-[#333] px-3 py-2 rounded-lg"
+                            className="flex-1 bg-[#111] px-3 py-2 rounded-lg border border-white/10"
                             onChange={(e) =>
                               setreplytext({ text: e.target.value })
                             }
@@ -422,20 +394,6 @@ const Profile = () => {
           </div>
         )}
       </div>
-
-      {/* SMOOTH ANIMATIONS */}
-      <style>
-        {`
-          @keyframes slideDown {
-            0% { opacity: 0; transform: translateY(-10px); }
-            100% { opacity: 1; transform: translateY(0px); }
-          }
-          @keyframes fadeIn {
-            0% { opacity: 0; }
-            100% { opacity: 1; }
-          }
-        `}
-      </style>
     </div>
   );
 };
