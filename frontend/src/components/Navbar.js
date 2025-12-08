@@ -53,7 +53,7 @@ const Navbar = () => {
         <div className="mt-16 flex flex-col gap-6 text-xl">
           <Link to="/" onClick={() => setOpen(false)}>Home</Link>
           <Link to="/about" onClick={() => setOpen(false)}>About</Link>
-          <Link to="/contact" onClick={() => setOpen(false)}>Contact</Link>
+          {/* <Link to="/contact" onClick={() => setOpen(false)}>Contact</Link> */}
 
           <Link
             to="/login"
