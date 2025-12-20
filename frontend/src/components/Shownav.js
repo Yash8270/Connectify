@@ -31,9 +31,28 @@ const Shownav = () => {
   const [reqname, setreqname] = useState({ usernames: [] });
   const [followback, setfollowback] = useState([]);
 
+  // ✅ State for Profile Data in Sidebar
+  const [profile, setProfile] = useState({
+    username: "",
+    profilepic: "",
+    followers: 0,
+    following: 0,
+    bio: "",
+  });
+
   const navigate = useNavigate();
 
-  // Fetch "Don't Follow Back" list for Mobile Sidebar
+  // ✅ Load Profile Data from Cookies (Same logic as Showcase.js)
+  useEffect(() => {
+    setProfile({
+      username: Cookies.get("username"),
+      profilepic: Cookies.get("profile"), // In a real app, use this src
+      followers: Cookies.get("followers") || 0,
+      following: Cookies.get("following") || 0,
+      bio: Cookies.get("bio") || "No bio available",
+    });
+  }, [sidebarOpen]); // Reload when sidebar opens to ensure fresh data
+
   useEffect(() => {
     const fetchData = async () => {
       if (only_followers) {
@@ -203,30 +222,49 @@ const Shownav = () => {
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
-           <div className="text-center text-gray-400 text-sm mb-2">
-             Hello, <span className="text-white font-bold">{Cookies.get("username")}</span>
-           </div>
+          
+          {/* ✅ 1. PROFILE SECTION (Added) */}
+          <div className="bg-[#1a1a1a] rounded-xl p-4 border border-white/10 flex flex-col items-center text-center">
+            <div className="w-20 h-20 rounded-full ring-2 ring-yellow-400 overflow-hidden mb-3">
+              <img src="https://i.pravatar.cc/300" alt="profile" className="w-full h-full object-cover" />
+            </div>
+            
+            <div className="text-lg font-bold">{profile.username}</div>
+            <p className="text-xs text-gray-400 mb-3 line-clamp-2 px-2">{profile.bio}</p>
 
-          <div className="space-y-3">
-            <button
-              onClick={() => { togglePostModal(); closeSidebar(); }}
-              className="w-full text-center bg-yellow-400 text-black py-3 rounded-lg font-bold hover:opacity-90 transition"
+            <div className="flex items-center gap-6 text-sm mb-4 w-full justify-center bg-[#111] py-2 rounded-lg">
+              <div className="flex flex-col">
+                <span className="font-bold">{profile.followers}</span>
+                <span className="text-[10px] text-gray-400 uppercase">Followers</span>
+              </div>
+              <div className="w-[1px] h-6 bg-white/10"></div>
+              <div className="flex flex-col">
+                <span className="font-bold">{profile.following}</span>
+                <span className="text-[10px] text-gray-400 uppercase">Following</span>
+              </div>
+            </div>
+
+            <Link 
+               to={`/profile/${authdata?.userid}`} 
+               onClick={closeSidebar}
+               className="w-full bg-[#252525] hover:bg-[#333] py-2 rounded-lg font-semibold text-sm transition border border-white/5"
             >
-              Create Post
-            </button>
-            <Link
-              to={`/showcase/${authdata?.userid}`}
-              onClick={closeSidebar}
-              className="block w-full text-center bg-[#1a1a1a] hover:bg-[#232323] py-3 rounded-lg font-semibold text-white transition border border-white/5"
-            >
-              Back to Feed
+              View My Profile
             </Link>
           </div>
 
-          {/* ACCOUNTS YOU DON'T FOLLOW BACK (MOBILE) */}
+          {/* ✅ 2. ACTION BUTTONS (Back button removed) */}
+          <button
+            onClick={() => { togglePostModal(); closeSidebar(); }}
+            className="w-full text-center bg-yellow-400 text-black py-3 rounded-lg font-bold hover:opacity-90 transition shadow-lg shadow-yellow-400/10"
+          >
+            Create New Post
+          </button>
+
+          {/* ✅ 3. ACCOUNTS YOU DON'T FOLLOW BACK */}
           {followback.length > 0 && (
-            <div className="mt-4 pt-4 border-t border-white/10">
-              <h3 className="text-xs font-bold text-yellow-400 uppercase tracking-wider mb-3 px-1">
+            <div className="mt-2 pt-4 border-t border-white/10">
+              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 px-1">
                 Follow Back
               </h3>
               <div className="flex flex-col gap-3">
@@ -244,7 +282,7 @@ const Shownav = () => {
                     {/* Compact Actions */}
                     <div className="grid grid-cols-2 gap-2">
                       <button className="bg-[#333] hover:bg-[#444] text-xs py-2 rounded text-white transition">Remove</button>
-                      <button className="bg-yellow-400 hover:opacity-90 text-xs py-2 rounded text-black font-bold transition">Follow Back</button>
+                      <button className="bg-yellow-400 hover:opacity-90 text-xs py-2 rounded text-black font-bold transition">Confirm</button>
                     </div>
                   </div>
                 ))}
@@ -252,7 +290,7 @@ const Shownav = () => {
             </div>
           )}
 
-          {/* ✅ LOGOUT BUTTON - FIXED TO YELLOW */}
+          {/* ✅ 4. LOGOUT BUTTON (Yellow) */}
           <button
             onClick={handleCookie}
             className="mt-auto w-full text-center py-3 rounded-lg font-semibold border border-yellow-400 text-yellow-400 hover:bg-yellow-400 hover:text-black transition"
