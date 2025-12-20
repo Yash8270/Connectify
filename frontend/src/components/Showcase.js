@@ -166,14 +166,13 @@ const Showcase = () => {
   }, [profile_following, only_followers]);
 
   return (
-    // UPDATED: Added -mt-20 to pull bg up behind navbar spacer, and pt-20 to push content down
     <main className="min-h-screen bg-[#0f0f0f] text-white -mt-20 pt-20">
       
-      <div className="max-w-[1600px] mx-auto px-6 pb-10">
+      <div className="max-w-[1600px] mx-auto px-4 md:px-6 pb-10">
         <div className="grid grid-cols-12 gap-6">
           
-          {/* LEFT PROFILE */}
-          <aside className="col-span-12 lg:col-span-3">
+          {/* LEFT PROFILE (Hidden on Mobile) */}
+          <aside className="hidden lg:block lg:col-span-3">
             <div className="space-y-6 sticky top-24">
 
               <div className="bg-[#1a1a1a] rounded-xl p-6 border border-white/10">
@@ -229,7 +228,7 @@ const Showcase = () => {
           {/* CENTER FEED */}
           <section className="col-span-12 lg:col-span-6">
 
-            <div className="flex items-center gap-4 mb-4 overflow-x-auto">
+            <div className="flex items-center gap-4 mb-4 overflow-x-auto pb-2 scrollbar-hide">
               {fpic.length > 0 ? fpic.map((f, i) => (
                 <div key={i} className="w-12 h-12 rounded-full ring-2 ring-yellow-400 overflow-hidden shrink-0">
                   <img src="https://i.pravatar.cc/300" alt="follow" className="w-full h-full object-cover" />
@@ -341,30 +340,30 @@ const Showcase = () => {
             </div>
           </section>
 
-          {/* RIGHT COLUMN */}
-          <aside className="col-span-12 lg:col-span-3">
-            <div className="bg-[#1a1a1a] rounded-xl p-4 border border-white/10 sticky top-20">
+          {/* RIGHT COLUMN (Hidden on Mobile -> Moved to Navbar) */}
+          <aside className="hidden lg:block lg:col-span-3">
+            <div className="bg-[#1a1a1a] rounded-xl p-4 border border-white/10 sticky top-24">
 
               <div className="font-semibold mb-3 text-gray-400">
                 Accounts You don't follow back
               </div>
 
-              <div className="space-y-4 max-h-[62vh] overflow-auto pr-2">
+              <div className="space-y-4 max-h-[62vh] overflow-auto pr-2 custom-scrollbar">
                 {followback.length > 0 ? followback.map((f, idx) => (
                   <div key={idx} className="bg-[#111] rounded-lg p-3 flex items-center gap-3">
 
-                    <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-yellow-400">
+                    <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-yellow-400 shrink-0">
                       <img src="https://i.pravatar.cc/300" alt="rec" className="w-full h-full object-cover" />
                     </div>
 
-                    <div className="flex-1">
-                      <div className="font-semibold">{f.username}</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold truncate">{f.username}</div>
                       <div className="text-sm text-yellow-400">Follows you</div>
                     </div>
 
-                    <div className="flex flex-col gap-2 w-36">
-                      <button className="bg-[#333] rounded-md py-2">Remove</button>
-                      <button className="bg-yellow-400 text-black rounded-md py-2">Follow Back</button>
+                    <div className="flex flex-col gap-2 w-32">
+                      <button className="bg-[#333] hover:bg-[#444] rounded-md py-1.5 text-sm transition">Remove</button>
+                      <button className="bg-yellow-400 hover:opacity-90 text-black rounded-md py-1.5 text-sm font-bold transition">Follow Back</button>
                     </div>
                   </div>
                 )) : <div className="text-gray-400 text-sm">There are no such accounts</div>}
