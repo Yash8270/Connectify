@@ -2,7 +2,7 @@ import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import Connect_Context from "../context/Connectcontext";
 import Pic from "./Pic";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react"; // Imported Loader2
 
 const Login = () => {
   const navigate = useNavigate();
@@ -21,7 +21,8 @@ const Login = () => {
     setText(text === signtext ? logintext : signtext);
   };
 
-  const { login_fxn } = useContext(Connect_Context);
+  // ✅ Get login_fxn AND loginLoading state from context
+  const { login_fxn, loginLoading } = useContext(Connect_Context);
 
   const [signdata, setsigndata] = useState({
     username: "",
@@ -49,6 +50,7 @@ const Login = () => {
 
   const handlelogin = async (e) => {
     e.preventDefault();
+    // loginLoading is handled automatically inside Api.js now
     const res = await login_fxn(logindata.username, logindata.password);
     if (res) navigate(`/showcase/${res.userid}`);
   };
@@ -91,11 +93,13 @@ const Login = () => {
               </button>
             </div>
 
+            {/* ✅ UPDATED LOGIN BUTTON WITH LOADING STATE */}
             <button
-              className="bg-yellow-400 text-black p-3 rounded font-bold hover:opacity-90 mt-2"
+              className={`bg-yellow-400 text-black p-3 rounded font-bold hover:opacity-90 mt-2 flex justify-center items-center transition-all ${loginLoading ? "opacity-60 cursor-not-allowed" : ""}`}
               onClick={handlelogin}
+              disabled={loginLoading}
             >
-              Login
+              {loginLoading ? <Loader2 className="animate-spin" size={24} /> : "Login"}
             </button>
 
             {/* MOBILE ONLY: Switch to Sign Up */}

@@ -4,6 +4,7 @@ import Connect_Context from "../context/Connectcontext";
 import Like from "../assets/like.svg";
 import commentss from "../assets/comment.svg";
 import Cookies from "js-cookie";
+import { Loader2 } from "lucide-react"; // Import Loader
 
 const Showcase = () => {
   const inputRef = useRef(null);
@@ -21,6 +22,10 @@ const Showcase = () => {
     postreply,
     profile_following,
     only_followers,
+    // ✅ Load Loading States
+    postLoading,
+    commentLoading,
+    replyLoading
   } = context;
 
   const [posts, setposts] = useState([]);
@@ -108,6 +113,7 @@ const Showcase = () => {
 
     setActivePostId(postId);
 
+    // The loading state 'commentLoading' is toggled in Api.js inside getcom
     const compost = await getcom(postId, authdata.authtoken);
     const useridarray = compost.map((c) => c.userid);
     const usernames = await idtouser(useridarray);
@@ -131,6 +137,7 @@ const Showcase = () => {
 
   const handlereply = async (comment_id) => {
     if (visible === comment_id) return setvisible(null);
+    setvisible(comment_id); // Set visible immediately to show the loading area
 
     const replydata = await getreply(comment_id, authdata.authtoken);
     const useridarray = replydata.map((r) => r.userid);
@@ -138,7 +145,6 @@ const Showcase = () => {
 
     setreplies(replydata);
     setreplyusers(usernames);
-    setvisible(comment_id);
   };
 
   useEffect(() => {
@@ -146,13 +152,14 @@ const Showcase = () => {
       const fetchedPosts = await getallpost(authdata.authtoken);
       setposts(fetchedPosts);
 
-      const useridarray = fetchedPosts.map((p) => p.userid);
-      const usernames = await idtouser(useridarray);
-
-      setusers(usernames);
+      if (fetchedPosts) {
+        const useridarray = fetchedPosts.map((p) => p.userid);
+        const usernames = await idtouser(useridarray);
+        setusers(usernames);
+      }
     };
     fetchPosts();
-  }, [authdata, getallpost, idtouser]);
+  }, [authdata]); // Removed recursive dependency on getallpost
 
   useEffect(() => {
     const fetchData = async () => {
@@ -163,7 +170,7 @@ const Showcase = () => {
       setfollowback(dont_f_back);
     };
     fetchData();
-  }, [profile_following, only_followers]);
+  }, []);
 
   return (
     <main className="min-h-screen bg-[#0f0f0f] text-white -mt-20 pt-20">
@@ -229,115 +236,147 @@ const Showcase = () => {
           <section className="col-span-12 lg:col-span-6">
 
             <div className="flex items-center gap-4 mb-4 overflow-x-auto pb-2 scrollbar-hide">
-              {fpic.length > 0 ? fpic.map((f, i) => (
+              {fpic && fpic.length > 0 ? fpic.map((f, i) => (
                 <div key={i} className="w-12 h-12 rounded-full ring-2 ring-yellow-400 overflow-hidden shrink-0">
                   <img src="https://i.pravatar.cc/300" alt="follow" className="w-full h-full object-cover" />
                 </div>
               )) : <div className="text-gray-400 text-sm">No followers</div>}
             </div>
 
-            <div className="space-y-6">
-              {posts.map((post, index) => (
-                <article key={post._id || index} className="bg-[#1a1a1a] rounded-xl p-6 border border-white/10">
+            {/* ✅ POST LOADING STATE */}
+            {postLoading && posts.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-20">
+                <Loader2 className="animate-spin text-yellow-400 mb-4" size={48} />
+                <p className="text-gray-400">Loading Feed...</p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {posts.map((post, index) => (
+                  <article key={post._id || index} className="bg-[#1a1a1a] rounded-xl p-6 border border-white/10">
 
-                  {/* HEADER */}
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="w-12 h-12 rounded-full overflow-hidden">
-                      <img src="https://i.pravatar.cc/300" alt="profile" className="w-full h-full object-cover" />
+                    {/* HEADER */}
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="w-12 h-12 rounded-full overflow-hidden">
+                        <img src="https://i.pravatar.cc/300" alt="profile" className="w-full h-full object-cover" />
+                      </div>
+                      <div className="font-semibold">{users.usernames[index] || "unknown"}</div>
                     </div>
-                    <div className="font-semibold">{users.usernames[index] || "unknown"}</div>
-                  </div>
 
-                  <div className="text-gray-200 mb-4">{post.description}</div>
+                    <div className="text-gray-200 mb-4">{post.description}</div>
 
-                  {post.image && (
-                    <div className="mb-4">
-                      <img src={post.image} alt="post" className="w-full rounded-lg border border-black/40 object-contain max-h-[66vh]" />
-                    </div>
-                  )}
+                    {post.image && (
+                      <div className="mb-4">
+                        <img src={post.image} alt="post" className="w-full rounded-lg border border-black/40 object-contain max-h-[66vh]" />
+                      </div>
+                    )}
 
-                  {/* LIKE + COMMENT */}
-                  <div className="flex items-center gap-6 text-sm mb-4">
-                    <div className="flex items-center gap-2">
-                      <button onClick={async () => await handlelike(post)}>
-                        <img src={Like} alt="like" className="w-5 h-5" />
+                    {/* LIKE + COMMENT */}
+                    <div className="flex items-center gap-6 text-sm mb-4">
+                      <div className="flex items-center gap-2">
+                        <button onClick={async () => await handlelike(post)}>
+                          <img src={Like} alt="like" className="w-5 h-5" />
+                        </button>
+                        <div>{post.likes.length}</div>
+                      </div>
+
+                      <button onClick={() => handleCommentClick(post._id)} className="flex items-center gap-2">
+                        <img src={commentss} alt="comments" className="w-5 h-5" />
+                        <span>
+                          {activePostId === post._id ? "Hide" : "Show"} {post.comments.length}
+                        </span>
                       </button>
-                      <div>{post.likes.length}</div>
                     </div>
 
-                    <button onClick={() => handleCommentClick(post._id)} className="flex items-center gap-2">
-                      <img src={commentss} alt="comments" className="w-5 h-5" />
-                      <span>
-                        {activePostId === post._id ? "Hide" : "Show"} {post.comments.length}
-                      </span>
-                    </button>
-                  </div>
+                    {/* COMMENT INPUT */}
+                    <div className="flex items-center gap-3">
+                      <input
+                        ref={inputRef}
+                        placeholder="Write a comment"
+                        onChange={(e) => setcomtext({ text: e.target.value })}
+                        className="flex-1 bg-[#111] rounded-full py-3 px-4 border border-white/10"
+                      />
+                      <button
+                        onClick={() => SubmitComment(post._id)}
+                        className="bg-yellow-400 text-black px-4 py-2 rounded-full font-semibold hover:opacity-90"
+                      >
+                        Send
+                      </button>
+                    </div>
 
-                  {/* COMMENT INPUT */}
-                  <div className="flex items-center gap-3">
-                    <input
-                      ref={inputRef}
-                      placeholder="Write a comment"
-                      onChange={(e) => setcomtext({ text: e.target.value })}
-                      className="flex-1 bg-[#111] rounded-full py-3 px-4 border border-white/10"
-                    />
-                    <button
-                      onClick={() => SubmitComment(post._id)}
-                      className="bg-yellow-400 text-black px-4 py-2 rounded-full font-semibold"
-                    >
-                      Send
-                    </button>
-                  </div>
+                    {/* COMMENTS SECTION */}
+                    {activePostId === post._id && (
+                      <div className="mt-4 space-y-4 border-t border-white/10 pt-4">
+                        
+                        {/* ✅ COMMENT LOADING STATE */}
+                        {commentLoading ? (
+                           <div className="flex justify-center py-4">
+                             <Loader2 className="animate-spin text-yellow-400" size={24} />
+                           </div>
+                        ) : (
+                          <>
+                            {com.length > 0 ? com.map((c, idx) => (
+                              <div key={idx} className="bg-[#111] p-3 rounded-lg">
 
-                  {/* COMMENTS */}
-                  {activePostId === post._id && (
-                    <div className="mt-4 space-y-4 border-t border-white/10 pt-4">
-                      {com.length > 0 ? com.map((c, idx) => (
-                        <div key={idx} className="bg-[#111] p-3 rounded-lg">
-
-                          <div className="font-semibold text-gray-300 mb-1">
-                            {comusers.usernames[idx] || "user"}
-                          </div>
-
-                          <div className="text-gray-400 mb-1">{c.text}</div>
-
-                          <button onClick={() => handlereply(c._id)} className="text-sm text-yellow-400">
-                            {visible === c._id ? "Hide Replies" : "Show Replies"}
-                          </button>
-
-                          {visible === c._id && (
-                            <div className="mt-2 flex gap-2">
-                              <input
-                                placeholder="Reply..."
-                                onChange={(e) => setreplytext({ text: e.target.value })}
-                                className="flex-1 bg-[#000] rounded-full py-2 px-3 border border-white/10"
-                              />
-                              <button
-                                onClick={() => Submitreply(c._id)}
-                                className="bg-yellow-400 text-black px-4 py-1 rounded-full"
-                              >
-                                Send
-                              </button>
-                            </div>
-                          )}
-
-                          {visible === c._id && replies.length > 0 && (
-                            <div className="mt-3 space-y-3 text-sm">
-                              {replies.map((r, ridx) => (
-                                <div key={ridx} className="text-gray-300">
-                                  <span className="font-semibold">{replyusers.usernames[ridx] || "user"}:</span>{" "}
-                                  {r.text}
+                                <div className="font-semibold text-gray-300 mb-1">
+                                  {comusers.usernames[idx] || "user"}
                                 </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      )) : <div className="text-gray-500 text-sm">No comments yet.</div>}
-                    </div>
-                  )}
-                </article>
-              ))}
-            </div>
+
+                                <div className="text-gray-400 mb-1">{c.text}</div>
+
+                                <button onClick={() => handlereply(c._id)} className="text-sm text-yellow-400">
+                                  {visible === c._id ? "Hide Replies" : "Show Replies"}
+                                </button>
+
+                                {/* REPLIES SECTION */}
+                                {visible === c._id && (
+                                  <div className="mt-3">
+                                    {/* ✅ REPLY LOADING STATE */}
+                                    {replyLoading ? (
+                                       <div className="flex items-center gap-2 mb-2 ml-4">
+                                          <Loader2 className="animate-spin text-yellow-400" size={16} />
+                                          <span className="text-xs text-gray-500">Loading replies...</span>
+                                       </div>
+                                    ) : (
+                                      <>
+                                        {replies.length > 0 && (
+                                          <div className="mb-3 space-y-2 text-sm pl-4 border-l-2 border-white/10">
+                                            {replies.map((r, ridx) => (
+                                              <div key={ridx} className="text-gray-300">
+                                                <span className="font-semibold text-gray-400">{replyusers.usernames[ridx] || "user"}:</span>{" "}
+                                                {r.text}
+                                              </div>
+                                            ))}
+                                          </div>
+                                        )}
+                                      </>
+                                    )}
+
+                                    {/* Reply Input (Always visible when replies are toggled) */}
+                                    <div className="flex gap-2">
+                                      <input
+                                        placeholder="Reply..."
+                                        onChange={(e) => setreplytext({ text: e.target.value })}
+                                        className="flex-1 bg-[#000] rounded-full py-2 px-3 border border-white/10 text-sm"
+                                      />
+                                      <button
+                                        onClick={() => Submitreply(c._id)}
+                                        className="bg-yellow-400 text-black px-4 py-1 rounded-full text-sm font-bold"
+                                      >
+                                        Send
+                                      </button>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            )) : <div className="text-gray-500 text-sm">No comments yet.</div>}
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </article>
+                ))}
+              </div>
+            )}
           </section>
 
           {/* RIGHT COLUMN (Hidden on Mobile -> Moved to Navbar) */}
@@ -349,7 +388,7 @@ const Showcase = () => {
               </div>
 
               <div className="space-y-4 max-h-[62vh] overflow-auto pr-2 custom-scrollbar">
-                {followback.length > 0 ? followback.map((f, idx) => (
+                {followback && followback.length > 0 ? followback.map((f, idx) => (
                   <div key={idx} className="bg-[#111] rounded-lg p-3 flex items-center gap-3">
 
                     <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-yellow-400 shrink-0">

@@ -10,6 +10,7 @@ const socket = io('https://connectify-aml7.onrender.com', {
 const Api = (props) => {
   const host = "https://connectify-aml7.onrender.com";
 
+  // ✅ EXISTING STATES
   const [authdata, setauthdata] = useState({
     authtoken: Cookies.get('auth-token'),
     userid: Cookies.get('userid'),
@@ -21,6 +22,14 @@ const Api = (props) => {
   const [nfollow, setnfollow] = useState(0);
   const [followreq, setfollowreq] = useState([]);
   const [currentChat, setcurrentChat] = useState('Hello');
+
+  // ✅ NEW LOADING STATES
+  const [loadingBarProgress, setLoadingBarProgress] = useState(0); // For top loading bar (0-100)
+  const [loginLoading, setLoginLoading] = useState(false);         // For Login/Signin buttons
+  const [postLoading, setPostLoading] = useState(false);           // For Feed loading
+  const [chatLoading, setChatLoading] = useState(false);           // For Chat list/messages
+  const [commentLoading, setCommentLoading] = useState(false);     // For Comments section
+  const [replyLoading, setReplyLoading] = useState(false);         // For Replies section
 
   // ✅ Load cookies
   useEffect(() => {
@@ -84,6 +93,8 @@ const Api = (props) => {
 
   // ✅ Sign-in
   const signin = async (formData) => {
+    setLoadingBarProgress(30);
+    setLoginLoading(true);
     try {
       const response = await fetch(`${host}/api/auth/signin`, {
         method: 'POST',
@@ -91,6 +102,7 @@ const Api = (props) => {
         credentials: 'include',
       });
 
+      setLoadingBarProgress(70);
       const json = await response.json();
       setauthdata(json);
 
@@ -103,14 +115,20 @@ const Api = (props) => {
       Cookies.set('bio', json.user_detail.bio, { expires: 1, secure: true, sameSite: 'None' });
       Cookies.set('skills', json.user_detail.skills, { expires: 1, secure: true, sameSite: 'None' });
 
+      setLoadingBarProgress(100);
       return json;
     } catch (error) {
       console.log("Signin error:", error);
+      setLoadingBarProgress(100);
+    } finally {
+      setLoginLoading(false);
     }
   };
 
   // ✅ Login
   const login_fxn = async (username, password) => {
+    setLoadingBarProgress(30);
+    setLoginLoading(true);
     try {
       const response = await fetch(`${host}/api/auth/login`, {
         method: 'POST',
@@ -119,9 +137,13 @@ const Api = (props) => {
         credentials: 'include',
       });
 
+      setLoadingBarProgress(60);
+
       if (response.status === 401 || response.status === 500) {
         const errorData = await response.json();
         alert(`Error: ${errorData.message || 'Something went wrong'}`);
+        setLoadingBarProgress(100);
+        setLoginLoading(false);
         return errorData.value;
       }
 
@@ -137,19 +159,33 @@ const Api = (props) => {
       Cookies.set('bio', json.user_detail.bio, { expires: 1, secure: true, sameSite: 'None' });
       Cookies.set('skills', json.user_detail.skills, { expires: 1, secure: true, sameSite: 'None' });
 
+      setLoadingBarProgress(100);
       alert('Login successful!');
       return json;
     } catch (error) {
       console.log("Login error:", error);
+      setLoadingBarProgress(100);
+    } finally {
+      setLoginLoading(false);
     }
   };
 
   // ✅ Posts
   const getallpost = async () => {
+    setLoadingBarProgress(20);
+    setPostLoading(true);
     try {
       const response = await fetch(`${host}/api/post/getall`, { credentials: 'include' });
-      return await response.json();
-    } catch (error) { console.log(error); }
+      setLoadingBarProgress(70);
+      const data = await response.json();
+      setLoadingBarProgress(100);
+      return data;
+    } catch (error) { 
+      console.log(error); 
+      setLoadingBarProgress(100);
+    } finally {
+      setPostLoading(false);
+    }
   };
 
   const idtouser = async (ids) => {
@@ -178,10 +214,15 @@ const Api = (props) => {
   };
 
   const getcom = async (postid) => {
+    setCommentLoading(true);
     try {
       const response = await fetch(`${host}/api/post/getcomment/${postid}`, { credentials: 'include' });
       return await response.json();
-    } catch (error) { console.log(error); }
+    } catch (error) { 
+      console.log(error); 
+    } finally {
+      setCommentLoading(false);
+    }
   };
 
   const postcom = async (postid, auth_token, text) => {
@@ -197,10 +238,15 @@ const Api = (props) => {
   };
 
   const getreply = async (comment_id) => {
+    setReplyLoading(true);
     try {
       const response = await fetch(`${host}/api/post/getreply/${comment_id}`, { credentials: 'include' });
       return await response.json();
-    } catch (error) { console.log(error); }
+    } catch (error) { 
+      console.log(error); 
+    } finally {
+      setReplyLoading(false);
+    }
   };
 
   const postreply = async (comment_id, auth_token, text) => {
@@ -216,26 +262,47 @@ const Api = (props) => {
   };
 
   const selfpost = async () => {
+    setPostLoading(true);
     try {
       const response = await fetch(`${host}/api/post/selfpost`, { credentials: 'include' });
       return await response.json();
-    } catch (error) { console.log(error); }
+    } catch (error) { 
+      console.log(error); 
+    } finally {
+      setPostLoading(false);
+    }
   };
 
   const getchat = async (participant) => {
+    setChatLoading(true);
+    setLoadingBarProgress(30);
     try {
       const response = await fetch(`${host}/api/chat/getchat/${participant}`, { credentials: 'include' });
+      setLoadingBarProgress(100);
       return await response.json();
-    } catch (error) { console.log(error); }
+    } catch (error) { 
+      console.log(error);
+      setLoadingBarProgress(100); 
+    } finally {
+      setChatLoading(false);
+    }
   };
 
   const userchat = async () => {
+    setChatLoading(true);
+    setLoadingBarProgress(20);
     try {
       const response = await fetch(`${host}/api/chat/chatuser`, { credentials: 'include' });
       const json = await response.json();
       console.log("USER CHAT NAMES: ", json);
+      setLoadingBarProgress(100);
       return json;
-    } catch (error) { console.log(error); }
+    } catch (error) { 
+      console.log(error); 
+      setLoadingBarProgress(100);
+    } finally {
+      setChatLoading(false);
+    }
   };
 
   const firstchat = async (participants, mssg) => {
@@ -274,6 +341,7 @@ const Api = (props) => {
   };
 
   const followpost = async (fname) => {
+    setPostLoading(true);
     try {
       const response = await fetch(`${host}/api/post/getpost`, {
         method: 'POST',
@@ -282,7 +350,11 @@ const Api = (props) => {
         credentials: 'include'
       });
       return await response.json();
-    } catch (error) { console.log(error); }
+    } catch (error) { 
+      console.log(error); 
+    } finally {
+      setPostLoading(false);
+    }
   };
 
   const frequest = async (name) => {
@@ -403,7 +475,11 @@ const Api = (props) => {
       nfollow, setnfollow, acceptreq, followreq, setfollowreq,
       rejectreq, currentChat, setcurrentChat, firstchat, reqstatus,
       unfuser, seenstatus, delMessage, delchat, nchat, setnchat,
-      notification, socket, profile_following, only_followers
+      notification, socket, profile_following, only_followers,
+      
+      // ✅ Exposing Loading States
+      loadingBarProgress, setLoadingBarProgress,
+      loginLoading, postLoading, chatLoading, commentLoading, replyLoading
     }}>
       {props.children}
     </Connect_Context.Provider>
