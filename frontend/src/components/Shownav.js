@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import Connect_Context from "../context/Connectcontext";
+import ConnectContext from "../context/Connectcontext";
 import Post from "./Post";
 import Update from "./Update";
 import Cookies from "js-cookie";
@@ -8,7 +8,7 @@ import Request from "../assets/request.svg";
 import chat from "../assets/chat.svg";
 
 const Shownav = () => {
-  const context = useContext(Connect_Context);
+  const context = useContext(ConnectContext);
   const {
     authdata,
     searchuser,

@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import Connect_Context from "../context/Connectcontext";
+import ConnectContext from "../context/Connectcontext";
 import Like from "../assets/like.svg";
 import commentss from "../assets/comment.svg";
 import Cookies from "js-cookie";
@@ -9,7 +9,7 @@ import { Loader2 } from "lucide-react"; // Import Loader
 const Showcase = () => {
   const inputRef = useRef(null);
 
-  const context = useContext(Connect_Context);
+  const context = useContext(ConnectContext);
   const {
     authdata,
     getallpost,
@@ -159,7 +159,7 @@ const Showcase = () => {
       }
     };
     fetchPosts();
-  }, [authdata]); // Removed recursive dependency on getallpost
+  }, [authdata,getallpost, idtouser]); // Removed recursive dependency on getallpost
 
   useEffect(() => {
     const fetchData = async () => {
@@ -170,7 +170,7 @@ const Showcase = () => {
       setfollowback(dont_f_back);
     };
     fetchData();
-  }, []);
+  }, [profile_following, only_followers]);
 
   return (
     <main className="min-h-screen bg-[#0f0f0f] text-white -mt-20 pt-20">

@@ -1,6 +1,6 @@
 import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import Connect_Context from "../context/Connectcontext";
+import ConnectContext from "../context/Connectcontext";
 import Pic from "./Pic";
 import { Eye, EyeOff, Loader2 } from "lucide-react"; // Imported Loader2
 
@@ -22,7 +22,7 @@ const Login = () => {
   };
 
   // ✅ Get login_fxn AND loginLoading state from context
-  const { login_fxn, loginLoading } = useContext(Connect_Context);
+  const { login_fxn, loginLoading } = useContext(ConnectContext);
 
   const [signdata, setsigndata] = useState({
     username: "",

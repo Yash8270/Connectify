@@ -9,7 +9,7 @@ import Navbar from './components/Navbar';
 import Shownav from './components/Shownav';
 import Profile from './components/Profile';
 import Chat from './components/Chat';
-import Connect_Context from './context/Connectcontext';
+import ConnectContext from './context/Connectcontext';
 import Post from './components/Post';
 import Userprofile from './components/Userprofile';
 import Update from './components/Update';
@@ -17,7 +17,7 @@ import Update from './components/Update';
 const AppRoutes = () => {
 
   const location = useLocation();
-  const context = useContext(Connect_Context);
+  const context = useContext(ConnectContext);
   const { authdata } = context;
 
     return (

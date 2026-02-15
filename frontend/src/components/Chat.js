@@ -1,11 +1,11 @@
 import React, { useContext, useEffect, useState, useRef } from "react";
-import Connect_Context from "../context/Connectcontext";
+import ConnectContext from "../context/Connectcontext";
 import { IoEllipsisVertical, IoSearch } from "react-icons/io5";
 import { FiSend } from "react-icons/fi";
 import { Loader2 } from "lucide-react";
 
 const Chat = () => {
-  const context = useContext(Connect_Context);
+  const context = useContext(ConnectContext);
   const {
     userchat, // Function to get list of users you have chatted with
     searchuser, // State containing search results from Api.js

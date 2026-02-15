@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import Connect_Context from './Connectcontext';
+import ConnectContext from './Connectcontext';
 import Cookies from 'js-cookie';
 import { io } from 'socket.io-client';
 
@@ -467,7 +467,7 @@ const Api = (props) => {
   };
 
   return (
-    <Connect_Context.Provider value={{
+    <ConnectContext.Provider value={{
       authdata, setauthdata, signin, login_fxn, getallpost, idtouser,
       likepost, dislikepost, getcom, postcom, getreply, postreply,
       selfpost, getchat, userchat, chatting, cloudimage,
@@ -482,7 +482,7 @@ const Api = (props) => {
       loginLoading, postLoading, chatLoading, commentLoading, replyLoading
     }}>
       {props.children}
-    </Connect_Context.Provider>
+    </ConnectContext.Provider>
   );
 };
 

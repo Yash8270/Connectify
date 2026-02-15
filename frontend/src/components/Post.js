@@ -1,9 +1,9 @@
 import React, { useContext, useState, useRef } from "react";
-import Connect_Context from "../context/Connectcontext";
+import ConnectContext from "../context/Connectcontext";
 import { X, ImagePlus, Loader2, Trash2 } from "lucide-react";
 
 const Post = ({ show, setShow }) => {
-  const { cloudimage } = useContext(Connect_Context);
+  const { cloudimage } = useContext(ConnectContext);
 
   const [desc, setDesc] = useState("");
   const [image, setImage] = useState(null);

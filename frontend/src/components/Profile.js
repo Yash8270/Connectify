@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
-import Connect_Context from "../context/Connectcontext";
+import ConnectContext from "../context/Connectcontext";
 import Cookies from "js-cookie";
 import Like from "../assets/like.svg";
 import commentss from "../assets/comment.svg";
@@ -28,7 +28,7 @@ const Profile = () => {
 
   const [isMobile, setIsMobile] = useState(false);
 
-  const context = useContext(Connect_Context);
+  const context = useContext(ConnectContext);
   const {
     authdata,
     selfpost,

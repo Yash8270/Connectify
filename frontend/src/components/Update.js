@@ -1,8 +1,8 @@
 import React, { useContext, useEffect, useState } from "react";
-import Connect_Context from "../context/Connectcontext";
+import ConnectContext from "../context/Connectcontext";
 
 const Update = ({ showreq, setshowreq, reqname }) => {
-  const { followreq, acceptreq, rejectreq } = useContext(Connect_Context);
+  const { followreq, acceptreq, rejectreq } = useContext(ConnectContext);
 
   // Local copy of usernames so we don't need setreqname from parent
   const [localReqname, setLocalReqname] = useState({ usernames: [] });

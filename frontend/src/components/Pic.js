@@ -1,10 +1,10 @@
 import React, { useContext, useState, useRef } from "react";
-import Connect_Context from "../context/Connectcontext";
+import ConnectContext from "../context/Connectcontext";
 import { useNavigate } from "react-router-dom";
 
 const Pic = ({ show, setShow, signdata }) => {
   const navigate = useNavigate();
-  const { signin } = useContext(Connect_Context);
+  const { signin } = useContext(ConnectContext);
 
   const [image, setImage] = useState(null);
   const [preview, setPreview] = useState(null);

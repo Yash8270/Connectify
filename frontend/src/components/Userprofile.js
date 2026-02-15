@@ -1,13 +1,11 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
-import Connect_Context from "../context/Connectcontext";
-import { useNavigate, useParams } from "react-router-dom";
-import Cookies from "js-cookie";
+import ConnectContext from "../context/Connectcontext";
+import { useParams } from "react-router-dom";
 
 import Like from "../assets/like.svg";
 import commentss from "../assets/comment.svg";
 
 const Userprofile = () => {
-  const navigate = useNavigate();
   const { userid } = useParams();
 
   const [profile, setProfile] = useState({
@@ -33,7 +31,7 @@ const Userprofile = () => {
   const [postMessage, setPostMessage] = useState("No Posts Found");
   const [fstatus, setFstatus] = useState("Follow");
 
-  const context = useContext(Connect_Context);
+  const context = useContext(ConnectContext);
 
   const {
     authdata,
@@ -203,15 +201,15 @@ const Userprofile = () => {
   // ------------------ EFFECTS ----------------------
   useEffect(() => {
     loadUserInfo();
-  }, [userid]);
+  }, [userid, loadUserInfo]);
 
   useEffect(() => {
     loadFollowStatus();
-  }, [userid]);
+  }, [userid, loadFollowStatus]);
 
   useEffect(() => {
     if (profile.username) loadUserPosts();
-  }, [profile.username, fstatus]);
+  }, [profile.username, fstatus, loadUserPosts]);
 
   return (
     // ✅ FIXED: Added -mt-20 to pull background up, pt-20 to push content down
@@ -312,6 +310,7 @@ const Userprofile = () => {
                     <img
                       // src={profile.profilepic}
                       src ="https://i.pravatar.cc/300"
+                      alt="profile"
                       className="w-full h-full object-cover"
                     />
                   </div>
