@@ -233,7 +233,7 @@ const Profile = () => {
 
                 <div className="flex items-center mt-3 gap-6">
                   <div className="flex items-center gap-2 cursor-pointer">
-                    <img src={Like} it="" className="w-6 h-6" onClick={() => handlelike(post)} />
+                    <img src={Like} alt="" className="w-6 h-6" onClick={() => handlelike(post)} />
                     {post.likes.length}
                   </div>
 

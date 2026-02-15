@@ -23,7 +23,7 @@ import Update from "./components/Update";
 // -------------------- ROUTES COMPONENT --------------------
 const AppRoutes = () => {
   const location = useLocation();
-  const { authdata } = useContext(ConnectContext);
+  // const { authdata } = useContext(ConnectContext);
 
   const isPublicRoute =
     location.pathname === "/" ||
