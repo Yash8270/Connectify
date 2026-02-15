@@ -1,8 +1,16 @@
-import React from 'react';
-import { Navigate } from 'react-router-dom';
+import React, { useContext } from "react";
+import { Navigate } from "react-router-dom";
+import ConnectContext from "../context/Connectcontext";
 
-const ProtectedRoute = ({ isAuthenticated, children }) => {
-    return isAuthenticated ? children : <Navigate to="/login" />;
+const ProtectedRoute = ({ children }) => {
+  const { authdata } = useContext(ConnectContext);
+
+  // Check token existence
+  if (!authdata?.authtoken) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
 };
 
 export default ProtectedRoute;
