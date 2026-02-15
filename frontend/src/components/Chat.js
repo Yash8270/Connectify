@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState, useRef } from "react";
+import React, { useContext, useEffect, useState, useRef, useCallback } from "react";
 import ConnectContext from "../context/Connectcontext";
 import { IoEllipsisVertical, IoSearch } from "react-icons/io5";
 import { FiSend } from "react-icons/fi";
@@ -35,14 +35,16 @@ const Chat = () => {
     scrollToBottom();
   }, [messages]);
 
+  const loadChatUsers = useCallback(async () => {
+  const users = await userchat();
+  if (users) setChatUsers(users);
+}, [userchat]);
+
+
   // ✅ Load initial chat users list (Sidebar)
   useEffect(() => {
-    const loadChatUsers = async () => {
-      const users = await userchat();
-      if (users) setChatUsers(users);
-    };
     loadChatUsers();
-  }, []);
+  }, [loadChatUsers]);
 
   // ✅ Search Logic
   // Api.js has 'searchuser' state which is populated by search(). 

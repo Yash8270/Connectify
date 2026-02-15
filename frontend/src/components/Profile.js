@@ -151,7 +151,7 @@ const Profile = () => {
       setposts(fetched);
     };
     load();
-  }, [authdata]);
+  }, [authdata, selfpost]);
 
   return (
     // UPDATED: Added -mt-20 to pull bg up behind navbar spacer, and pt-20 to push content down
@@ -165,7 +165,7 @@ const Profile = () => {
 
             <div className="flex flex-col items-center">
               <div className="w-28 h-28 rounded-full overflow-hidden ring-4 ring-yellow-400">
-                <img src="https://i.pravatar.cc/300" className="w-full h-full object-cover" />
+                <img src="https://i.pravatar.cc/300" alt="" className="w-full h-full object-cover" />
               </div>
 
               <div className="mt-4 text-2xl font-semibold">{profile.username}</div>
@@ -218,7 +218,7 @@ const Profile = () => {
 
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-yellow-400">
-                    <img src="https://i.pravatar.cc/300" className="w-full h-full object-cover" />
+                    <img src="https://i.pravatar.cc/300" alt="" className="w-full h-full object-cover" />
                   </div>
                   <div className="text-lg font-semibold">{profile.username}</div>
                 </div>
@@ -227,18 +227,18 @@ const Profile = () => {
 
                 {post.image && (
                   <div className="w-full h-72 rounded-xl overflow-hidden bg-black">
-                    <img src={post.image} className="w-full h-full object-cover" />
+                    <img src={post.image} alt="" className="w-full h-full object-cover" />
                   </div>
                 )}
 
                 <div className="flex items-center mt-3 gap-6">
                   <div className="flex items-center gap-2 cursor-pointer">
-                    <img src={Like} className="w-6 h-6" onClick={() => handlelike(post)} />
+                    <img src={Like} it="" className="w-6 h-6" onClick={() => handlelike(post)} />
                     {post.likes.length}
                   </div>
 
                   <div className="flex items-center gap-2 cursor-pointer" onClick={() => handleCommentClick(post._id)}>
-                    <img src={commentss} className="w-6 h-6" />
+                    <img src={commentss} alt="" className="w-6 h-6" />
                     {post.comments.length}
                   </div>
                 </div>

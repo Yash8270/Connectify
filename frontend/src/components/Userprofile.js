@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useRef, useState, useCallback } from "react";
 import ConnectContext from "../context/Connectcontext";
 import { useParams } from "react-router-dom";
 
@@ -63,45 +63,47 @@ const Userprofile = () => {
   };
 
   // ------------------ LOAD USER INFO ----------------------
-  const loadUserInfo = async () => {
-    try {
-      const response = await fetch(
-        `https://connectify-aml7.onrender.com/api/auth/userinfo/${userid}`,
-        {
-          method: "GET",
-          credentials: "include",
-        }
-      );
+const loadUserInfo = useCallback(async () => {
+  try {
+    const response = await fetch(
+      `https://connectify-aml7.onrender.com/api/auth/userinfo/${userid}`,
+      {
+        method: "GET",
+        credentials: "include",
+      }
+    );
 
-      const json = await response.json();
-      if (json.error) return;
+    const json = await response.json();
+    if (json.error) return;
 
-      setProfile({
-        username: json.username,
-        profilepic: json.profilepic,
-        followers: json.followers,
-        following: json.following,
-        bio: json.bio || "No bio available",
-        skills: json.skills || [],
-      });
-    } catch (error) {
-      console.log(error);
-    }
-  };
+    setProfile({
+      username: json.username,
+      profilepic: json.profilepic,
+      followers: json.followers,
+      following: json.following,
+      bio: json.bio || "No bio available",
+      skills: json.skills || [],
+    });
+  } catch (error) {
+    console.log(error);
+  }
+}, [userid]);
+
 
   // ------------------ LOAD POSTS (only if following) ----------------------
-  const loadUserPosts = async () => {
-    if (fstatus !== "Following") {
-      setPostMessage("Follow this user to see their posts");
-      setPosts([]);
-      return;
-    }
+const loadUserPosts = useCallback(async () => {
+  if (fstatus !== "Following") {
+    setPostMessage("Follow this user to see their posts");
+    setPosts([]);
+    return;
+  }
 
-    const fetched = await followpost(profile.username);
+  const fetched = await followpost(profile.username);
 
-    if (fetched.message) setPostMessage(fetched.message);
-    else setPosts(fetched);
-  };
+  if (fetched.message) setPostMessage(fetched.message);
+  else setPosts(fetched);
+}, [fstatus, profile.username, followpost]);
+
 
   // ------------------ LIKE (FIXED: toggle) ----------------------
   const handleLike = async (post) => {
@@ -174,17 +176,18 @@ const Userprofile = () => {
   };
 
   // ------------------ FOLLOW STATUS ----------------------
-  const loadFollowStatus = async () => {
-    const data = await reqstatus(userid);
+const loadFollowStatus = useCallback(async () => {
+  const data = await reqstatus(userid);
 
-    if (data.message) setFstatus("Follow");
-    else {
-      const stat = data.followRequests[0].status;
-      if (stat === "pending") setFstatus("Requested");
-      else if (stat === "accepted") setFstatus("Following");
-      else setFstatus("Follow");
-    }
-  };
+  if (data.message) setFstatus("Follow");
+  else {
+    const stat = data.followRequests[0].status;
+    if (stat === "pending") setFstatus("Requested");
+    else if (stat === "accepted") setFstatus("Following");
+    else setFstatus("Follow");
+  }
+}, [userid, reqstatus]);
+
 
   const handleFollowRequest = async () => {
     if (fstatus === "Following") {
