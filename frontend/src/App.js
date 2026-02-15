@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React from "react";
 import {
   Routes,
   Route,
@@ -15,7 +15,6 @@ import Navbar from "./components/Navbar";
 import Shownav from "./components/Shownav";
 import Profile from "./components/Profile";
 import Chat from "./components/Chat";
-import ConnectContext from "./context/Connectcontext";
 import Userprofile from "./components/Userprofile";
 import Update from "./components/Update";
 
