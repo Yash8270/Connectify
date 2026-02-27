@@ -171,7 +171,7 @@ const Showcase = () => {
       }
     };
     fetchPosts();
-  }, []);
+  }, [authdata.authtoken, getallpost, idtouser]);
 
   useEffect(() => {
     const fetchData = async () => {
