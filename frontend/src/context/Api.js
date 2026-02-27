@@ -13,6 +13,14 @@ const socket = io('https://connectify-aml7.onrender.com', {
   reconnectionDelay: 1000,
 });
 
+// const socket = io('http://localhost:5000', {
+//   withCredentials: true,
+//   autoConnect: true,
+//   reconnection: true,
+//   reconnectionAttempts: Infinity,
+//   reconnectionDelay: 1000,
+// });
+
 const Api = (props) => {
   // const host = "http://localhost:5000";
   const host = "https://connectify-aml7.onrender.com";
@@ -41,29 +49,39 @@ const Api = (props) => {
   const [chatNotif, setChatNotif] = useState(null);
   const chatNotifTimer = useRef(null);
 
-  // ── Keep a ref to authdata.userid so socket callbacks can read it ─
   const authdataRef = useRef(authdata);
   useEffect(() => {
     authdataRef.current = authdata;
   }, [authdata]);
 
+  // ✅ Get Unseen Count instantly from DB (Memoized)
+  const notification = useCallback(async () => {
+    try {
+      const response = await fetch(`${host}/api/chat/unseen`, { credentials: 'include' });
+      const json = await response.json();
+      setnchat(json.unseenCount);
+      return json;
+    } catch (error) { console.log(error); }
+  }, []);
+
+  // ✅ Fetch unread counts immediately on app load
+  useEffect(() => {
+    if (authdata?.userid) {
+      notification();
+    }
+  }, [authdata?.userid, notification]);
+
+
   // ── SOCKET SETUP ─────────────────────────────────────────────
-  // THE KEY FIX: Register the user both on 'connect' AND whenever
-  // authdata changes. This covers:
-  //   1. Page load when socket connects after cookies are already set
-  //   2. Login: authdata changes, so we re-register with the new userid
-  //   3. Socket reconnection: 'connect' fires again, re-registers automatically
   useEffect(() => {
     const userId = authdata?.userid;
     if (!userId) return;
 
-    // Register immediately if already connected
     if (socket.connected) {
       console.log('Socket already connected — registering:', userId);
       socket.emit('registerUser', userId);
     }
 
-    // Re-register on every (re)connection
     const handleConnect = () => {
       console.log('Socket connected — registering:', userId);
       socket.emit('registerUser', userId);
@@ -72,9 +90,15 @@ const Api = (props) => {
     // Notification banner for incoming messages
     const handleNotif = (data) => {
       setChatNotif(data);
-      setnchat((prev) => prev + 1);
+      
       if (chatNotifTimer.current) clearTimeout(chatNotifTimer.current);
       chatNotifTimer.current = setTimeout(() => setChatNotif(null), 4000);
+
+      // ✅ FIX: Instead of blind +1, fetch real count.
+      // Delaying by 800ms ensures if Chat.js is actively open, it marks it seen BEFORE this fetches.
+      setTimeout(() => {
+        notification();
+      }, 800);
     };
 
     socket.on('connect', handleConnect);
@@ -85,7 +109,7 @@ const Api = (props) => {
       socket.off('notif', handleNotif);
       if (chatNotifTimer.current) clearTimeout(chatNotifTimer.current);
     };
-  }, [authdata?.userid]);
+  }, [authdata?.userid, notification]);
 
   // ── Load cookies ──────────────────────────────────────────────
   useEffect(() => {
@@ -160,8 +184,8 @@ const Api = (props) => {
       Cookies.set('bio', json.user_detail.bio, { expires: 1, secure: true, sameSite: 'None' });
       Cookies.set('skills', json.user_detail.skills, { expires: 1, secure: true, sameSite: 'None' });
       setLoadingBarProgress(100);
-      // Re-register with socket after login
       socket.emit('registerUser', json.userid);
+      notification(); // Initialize counts
       return json;
     } catch (error) {
       console.log("Signin error:", error);
@@ -201,8 +225,8 @@ const Api = (props) => {
       Cookies.set('bio', json.user_detail.bio, { expires: 1, secure: true, sameSite: 'None' });
       Cookies.set('skills', json.user_detail.skills, { expires: 1, secure: true, sameSite: 'None' });
       setLoadingBarProgress(100);
-      // Re-register with socket after login
       socket.emit('registerUser', json.userid);
+      notification(); // Initialize counts
       alert('Login successful!');
       return json;
     } catch (error) {
@@ -449,15 +473,6 @@ const Api = (props) => {
     } catch (error) { console.log(error); }
   };
 
-  const notification = useCallback(async () => {
-    try {
-      const response = await fetch(`${host}/api/chat/unseen`, { credentials: 'include' });
-      const json = await response.json();
-      setnchat(json.unseenCount);
-      return json;
-    } catch (error) { console.log(error); }
-  }, []);
-
   const delMessage = async (id) => {
     try {
       const response = await fetch(`${host}/api/chat/delmssg/${id}`, {
@@ -494,7 +509,6 @@ const Api = (props) => {
     } catch (error) { console.log(error); }
   }, []);
 
-  // Add this below your existing `unfuser` function:
   const remfollower = async (id) => {
     try {
       const response = await fetch(`${host}/api/follow/removefollower/${id}`, {
@@ -506,9 +520,6 @@ const Api = (props) => {
     } catch (error) { console.log(error); }
   };
 
-  // ... 
-
-  // THEN, add `remfollower` to your Context Provider values at the bottom:
   return (
     <ConnectContext.Provider value={{
       authdata, setauthdata, signin, login_fxn, getallpost, idtouser,
@@ -517,7 +528,7 @@ const Api = (props) => {
       searchuser, followname, setfollowname, followpost, frequest,
       nfollow, setnfollow, acceptreq, followreq, setfollowreq,
       rejectreq, currentChat, setcurrentChat, firstchat, reqstatus,
-      unfuser, remfollower, seenstatus, delMessage, delchat, nchat, setnchat, // <--- Added remfollower here
+      unfuser, remfollower, seenstatus, delMessage, delchat, nchat, setnchat,
       notification, socket, profile_following, only_followers,
       chatNotif, setChatNotif,
       loadingBarProgress, setLoadingBarProgress,

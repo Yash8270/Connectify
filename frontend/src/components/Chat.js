@@ -18,6 +18,39 @@ const formatTimeAgo = (dateString) => {
   return `${Math.floor(diffInHours / 24)}d ago`;
 };
 
+const formatMessageTime = (dateString) => {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+};
+
+const formatDateSeparator = (dateString) => {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  const now = new Date();
+  
+  const isToday = date.getDate() === now.getDate() && 
+                  date.getMonth() === now.getMonth() && 
+                  date.getFullYear() === now.getFullYear();
+
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  const isYesterday = date.getDate() === yesterday.getDate() && 
+                      date.getMonth() === yesterday.getMonth() && 
+                      date.getFullYear() === yesterday.getFullYear();
+
+  if (isToday) return "Today";
+  if (isYesterday) return "Yesterday";
+
+  const diffTime = Math.abs(now - date);
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  
+  if (diffDays < 7) {
+    return date.toLocaleDateString([], { weekday: 'long' }); 
+  }
+  return date.toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' }); 
+};
+
 // ── Normalize any ID to a plain string for comparison ─────────────
 const sid = (v) => (v ? v.toString().trim() : "");
 
@@ -53,13 +86,11 @@ const Chat = () => {
   const didAutoSelect = useRef(false);
   const typingTimeoutRef = useRef(null);
 
-  // ── Keep latest selectedUser accessible from socket callbacks ──
   const selectedUserRef = useRef(null);
   useEffect(() => {
     selectedUserRef.current = selectedUser;
   }, [selectedUser]);
 
-  // ── Keep latest authdata accessible too ───────────────────────
   const authdataRef = useRef(authdata);
   useEffect(() => {
     authdataRef.current = authdata;
@@ -70,7 +101,6 @@ const Chat = () => {
   };
   useEffect(() => { scrollToBottom(); }, [messages]);
 
-  // ── Load sidebar once on mount ────────────────────────────────
   const loadChatUsers = useCallback(async () => {
     const users = await userchat();
     if (Array.isArray(users)) setChatUsers(users);
@@ -78,7 +108,6 @@ const Chat = () => {
 
   useEffect(() => { loadChatUsers(); }, [loadChatUsers]);
 
-  // ── Auto-select from Userprofile "Message" button ─────────────
   useEffect(() => {
     if (didAutoSelect.current) return;
     const incoming = location.state?.chatUser;
@@ -112,15 +141,17 @@ const Chat = () => {
           },
         ]);
         
-        seenstatus(sid(currentUser._id), new Date().toISOString());
+        // ✅ Tell DB it is seen, THEN sync global notifications instantly
+        seenstatus(sid(currentUser._id), new Date().toISOString()).then(() => {
+          notification(); 
+        });
+
         socket.emit("seen", {
           userid: myId,
           receiverid: senderId,
           seen: true,
         });
       } else {
-        // ✅ The message is for a chat that is NOT currently open
-        // Push the user to the top and mark them as having an unseen message
         setChatUsers(prev => {
           const userIndex = prev.findIndex(u => sid(u.userid || u._id) === senderId);
           if (userIndex !== -1) {
@@ -131,6 +162,9 @@ const Chat = () => {
           }
           return prev; 
         });
+
+        // ✅ If chat is closed, sync notification instantly
+        notification();
       }
 
       setTypingUsers((prev) => ({ ...prev, [senderId]: false }));
@@ -175,7 +209,7 @@ const Chat = () => {
   const markSeen = useCallback(async (userId) => {
     try {
       await seenstatus(userId, new Date().toISOString());
-      await notification();
+      await notification(); // ✅ Updates badge globally
       socket?.emit("seen", {
         userid: sid(authdata?.userid),
         receiverid: sid(userId),
@@ -195,7 +229,6 @@ const Chat = () => {
     setMessages([]);
     setChatExists(false);
 
-    // ✅ Reset Unseen Status Locally in sidebar instantly
     setChatUsers(prev => prev.map(user => 
       sid(user.userid || user._id) === sid(userId) ? { ...user, hasUnseen: false } : user
     ));
@@ -205,7 +238,7 @@ const Chat = () => {
       if (chatData && chatData.messages && chatData.messages.length > 0) {
         setMessages(chatData.messages);
         setChatExists(true);
-        markSeen(userId);
+        markSeen(userId); // ✅ Executes update function
       } else {
         setMessages([]);
         setChatExists(false);
@@ -217,7 +250,6 @@ const Chat = () => {
     }
   };
 
-  // ── Typing detection ──────────────────────────────────────────
   const handleTyping = (e) => {
     setText(e.target.value);
     if (!socket || !selectedUserRef.current) return;
@@ -240,7 +272,6 @@ const Chat = () => {
     }, 2000);
   };
 
-  // ── Send message ──────────────────────────────────────────────
   const handleSend = async () => {
     if (!text.trim() || !selectedUser || sendingMessage) return;
 
@@ -318,7 +349,6 @@ const Chat = () => {
     }
   };
 
-  // ── Delete chat ───────────────────────────────────────────────
   const handleDeleteChat = async (e, u) => {
     e.stopPropagation();
     const userId = u._id || u.userid;
@@ -332,16 +362,17 @@ const Chat = () => {
       setChatExists(false);
     }
     setDropdownOpen(null);
+    
+    // ✅ Refresh global notifications if an unread chat was deleted
+    notification(); 
   };
 
-  // ── Sidebar list ──────────────────────────────────────────────
   const filteredUsers = query.trim()
     ? searchuser
         .filter((u) => u.username?.toLowerCase().includes(query.toLowerCase()))
         .map((u) => ({ ...u, _id: u._id, isSearchResult: true }))
     : chatUsers.map((u) => ({ ...u, _id: u.userid }));
 
-  // ✅ Read active user typing status (for header)
   const isSelectedUserTyping = selectedUser 
     ? typingUsers[sid(selectedUser._id || selectedUser.userid)] 
     : false;
@@ -379,10 +410,7 @@ const Chat = () => {
                 filteredUsers.map((u, i) => {
                   const userId = u._id || u.userid;
                   const isSelected = sid(selectedUser?._id) === sid(userId);
-                  
-                  // Check if this user in the list is typing
                   const isUserTyping = typingUsers[sid(userId)];
-                  // Read the newly assigned hasUnseen backend flag
                   const hasUnseen = u.hasUnseen === true;
 
                   return (
@@ -404,7 +432,6 @@ const Chat = () => {
                       </div>
 
                       <div className="flex-1 min-w-0">
-                        {/* ✅ BOLD USERNAME IF UNREAD */}
                         <div className={`text-sm truncate ${
                           hasUnseen ? "text-white font-extrabold" 
                           : isSelected ? "text-yellow-400 font-bold" 
@@ -412,8 +439,6 @@ const Chat = () => {
                         }`}>
                           {u.username || "Unknown User"}
                         </div>
-                        
-                        {/* ✅ BLUE & BOLD "NEW MESSAGE" INDICATOR */}
                         <div className={`text-xs truncate ${hasUnseen && !isUserTyping ? "text-blue-400 font-bold" : "text-gray-500"}`}>
                           {isUserTyping ? (
                             <span className="text-yellow-400 font-medium animate-pulse">Typing...</span>
@@ -427,7 +452,6 @@ const Chat = () => {
                         </div>
                       </div>
 
-                      {/* ✅ GLOWING DOT FOR UNREAD MESSAGE */}
                       {hasUnseen && (
                          <div className="w-2.5 h-2.5 bg-blue-500 rounded-full shrink-0 shadow-[0_0_8px_rgba(59,130,246,0.8)] mr-1"></div>
                       )}
@@ -513,7 +537,7 @@ const Chat = () => {
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 bg-[#0d0d0d]/50 scrollbar-thin scrollbar-thumb-gray-800">
+            <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-[#0d0d0d]/50 scrollbar-thin scrollbar-thumb-gray-800">
               {loadingMessages ? (
                 <div className="h-full flex flex-col items-center justify-center text-gray-500 gap-2">
                   <Loader2 className="animate-spin text-yellow-400" size={32} />
@@ -525,35 +549,46 @@ const Chat = () => {
                     messages.map((m, i) => {
                       const isMe = sid(m.sender) === sid(authdata?.userid) || m.self === true;
                       const isSeen = m.seen?.status === true;
-                      
-                      return (
-                        <div
-                          key={m._id || i}
-                          className={`flex flex-col ${isMe ? "items-end" : "items-start"} mb-2`}
-                        >
-                          <div
-                            className={`max-w-[75%] md:max-w-[60%] px-5 py-3 rounded-2xl text-sm shadow-md break-words
-                            ${isMe
-                              ? "bg-yellow-400 text-black rounded-tr-none font-medium"
-                              : "bg-[#2a2a2a] text-gray-200 rounded-tl-none border border-white/5"
-                            }`}
-                          >
-                            {m.text}
-                          </div>
 
-                          <div className={`text-[10px] mt-1 flex items-center gap-1 font-medium ${isMe ? "pr-1" : "text-gray-500 pl-1"}`}>
-                            {!isMe ? (
-                              <span>{formatTimeAgo(m.timestamp)}</span>
-                            ) : (
-                              <span className={isSeen ? "text-blue-400" : "text-gray-500"}>
-                                {isSeen 
-                                  ? `✓✓ Seen ${formatTimeAgo(m.seen?.duration || m.timestamp)}` 
-                                  : `✓ Sent ${formatTimeAgo(m.timestamp)}`
-                                }
+                      const currentMessageDate = new Date(m.timestamp).toDateString();
+                      const previousMessageDate = i > 0 ? new Date(messages[i - 1].timestamp).toDateString() : null;
+                      const showDateSeparator = currentMessageDate !== previousMessageDate;
+
+                      return (
+                        <React.Fragment key={m._id || i}>
+                          {showDateSeparator && (
+                            <div className="flex justify-center my-6">
+                              <span className="bg-[#2a2a2a] text-gray-400 text-[11px] uppercase tracking-wider px-3 py-1 rounded-full font-medium shadow-sm border border-white/5">
+                                {formatDateSeparator(m.timestamp)}
                               </span>
-                            )}
+                            </div>
+                          )}
+
+                          <div className={`flex flex-col ${isMe ? "items-end" : "items-start"} mb-3`}>
+                            <div
+                              className={`max-w-[75%] md:max-w-[60%] px-5 py-3 rounded-2xl text-sm shadow-md break-words
+                              ${isMe
+                                ? "bg-yellow-400 text-black rounded-tr-none font-medium"
+                                : "bg-[#2a2a2a] text-gray-200 rounded-tl-none border border-white/5"
+                              }`}
+                            >
+                              {m.text}
+                            </div>
+
+                            <div className={`text-[10px] mt-1 flex items-center gap-1 font-medium ${isMe ? "pr-1" : "text-gray-500 pl-1"}`}>
+                              {!isMe ? (
+                                <span>{formatMessageTime(m.timestamp)}</span>
+                              ) : (
+                                <span className={isSeen ? "text-blue-400" : "text-gray-500"}>
+                                  {isSeen 
+                                    ? `✓✓ Seen ${formatTimeAgo(m.seen?.duration || m.timestamp)}` 
+                                    : `✓ Sent ${formatTimeAgo(m.timestamp)}`
+                                  }
+                                </span>
+                              )}
+                            </div>
                           </div>
-                        </div>
+                        </React.Fragment>
                       );
                     })
                   ) : (
