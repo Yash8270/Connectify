@@ -1,16 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import ConnectContext from './Connectcontext';
 import Cookies from 'js-cookie';
 import { io } from 'socket.io-client';
 
+// ── Single socket instance ────────────────────────────────────────
+// Change this back to the production URL when deploying
 const socket = io('https://connectify-aml7.onrender.com', {
   withCredentials: true,
+  autoConnect: true,
+  reconnection: true,
+  reconnectionAttempts: Infinity,
+  reconnectionDelay: 1000,
 });
 
 const Api = (props) => {
+  // const host = "http://localhost:5000";
   const host = "https://connectify-aml7.onrender.com";
 
-  // ✅ EXISTING STATES
   const [authdata, setauthdata] = useState({
     authtoken: Cookies.get('auth-token'),
     userid: Cookies.get('userid'),
@@ -23,31 +29,77 @@ const Api = (props) => {
   const [followreq, setfollowreq] = useState([]);
   const [currentChat, setcurrentChat] = useState('Hello');
 
-  // ✅ NEW LOADING STATES
-  const [loadingBarProgress, setLoadingBarProgress] = useState(0); // For top loading bar (0-100)
-  const [loginLoading, setLoginLoading] = useState(false);         // For Login/Signin buttons
-  const [postLoading, setPostLoading] = useState(false);           // For Feed loading
-  const [chatLoading, setChatLoading] = useState(false);           // For Chat list/messages
-  const [commentLoading, setCommentLoading] = useState(false);     // For Comments section
-  const [replyLoading, setReplyLoading] = useState(false);         // For Replies section
+  // ── Loading states ────────────────────────────────────────────
+  const [loadingBarProgress, setLoadingBarProgress] = useState(0);
+  const [loginLoading, setLoginLoading] = useState(false);
+  const [postLoading, setPostLoading] = useState(false);
+  const [chatLoading, setChatLoading] = useState(false);
+  const [commentLoading, setCommentLoading] = useState(false);
+  const [replyLoading, setReplyLoading] = useState(false);
 
-  // ✅ Load cookies
+  // ── Notification banner ───────────────────────────────────────
+  const [chatNotif, setChatNotif] = useState(null);
+  const chatNotifTimer = useRef(null);
+
+  // ── Keep a ref to authdata.userid so socket callbacks can read it ─
+  const authdataRef = useRef(authdata);
+  useEffect(() => {
+    authdataRef.current = authdata;
+  }, [authdata]);
+
+  // ── SOCKET SETUP ─────────────────────────────────────────────
+  // THE KEY FIX: Register the user both on 'connect' AND whenever
+  // authdata changes. This covers:
+  //   1. Page load when socket connects after cookies are already set
+  //   2. Login: authdata changes, so we re-register with the new userid
+  //   3. Socket reconnection: 'connect' fires again, re-registers automatically
+  useEffect(() => {
+    const userId = authdata?.userid;
+    if (!userId) return;
+
+    // Register immediately if already connected
+    if (socket.connected) {
+      console.log('Socket already connected — registering:', userId);
+      socket.emit('registerUser', userId);
+    }
+
+    // Re-register on every (re)connection
+    const handleConnect = () => {
+      console.log('Socket connected — registering:', userId);
+      socket.emit('registerUser', userId);
+    };
+
+    // Notification banner for incoming messages
+    const handleNotif = (data) => {
+      setChatNotif(data);
+      setnchat((prev) => prev + 1);
+      if (chatNotifTimer.current) clearTimeout(chatNotifTimer.current);
+      chatNotifTimer.current = setTimeout(() => setChatNotif(null), 4000);
+    };
+
+    socket.on('connect', handleConnect);
+    socket.on('notif', handleNotif);
+
+    return () => {
+      socket.off('connect', handleConnect);
+      socket.off('notif', handleNotif);
+      if (chatNotifTimer.current) clearTimeout(chatNotifTimer.current);
+    };
+  }, [authdata?.userid]);
+
+  // ── Load cookies ──────────────────────────────────────────────
   useEffect(() => {
     try {
       const authtoken = Cookies.get('auth-token');
       const userid = Cookies.get('userid');
-
-      if (authtoken && userid) {
-        setauthdata({ authtoken, userid });
-      }
-
+      if (authtoken && userid) setauthdata({ authtoken, userid });
       setfollowname('');
     } catch (error) {
       console.log("Cookie load error:", error);
     }
   }, []);
 
-  // ✅ Load users
+  // ── Load all users for search ─────────────────────────────────
   useEffect(() => {
     const search = async () => {
       try {
@@ -62,14 +114,12 @@ const Api = (props) => {
         console.log("Search user error:", error);
       }
     };
-
     search();
   }, []);
 
-  // ✅ Load follow requests
+  // ── Load follow requests ──────────────────────────────────────
   useEffect(() => {
     if (!authdata?.authtoken || !authdata?.userid) return;
-
     const pending = async () => {
       try {
         const response = await fetch(`${host}/api/follow/selfreq`, {
@@ -77,9 +127,7 @@ const Api = (props) => {
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
         });
-
         if (!response.ok) return;
-
         const json = await response.json();
         setfollowreq(json);
         setnfollow(json.length);
@@ -87,11 +135,10 @@ const Api = (props) => {
         console.log("Self request error:", error);
       }
     };
-
     pending();
   }, [authdata]);
 
-  // ✅ Sign-in
+  // ── Sign-in ───────────────────────────────────────────────────
   const signin = async (formData) => {
     setLoadingBarProgress(30);
     setLoginLoading(true);
@@ -101,11 +148,9 @@ const Api = (props) => {
         body: formData,
         credentials: 'include',
       });
-
       setLoadingBarProgress(70);
       const json = await response.json();
       setauthdata(json);
-
       Cookies.set('auth-token', json.authtoken, { expires: 1, secure: true, sameSite: 'None' });
       Cookies.set('userid', json.userid, { expires: 1, secure: true, sameSite: 'None' });
       Cookies.set('username', json.user_detail.username, { expires: 1, secure: true, sameSite: 'None' });
@@ -114,8 +159,9 @@ const Api = (props) => {
       Cookies.set('profile', json.user_detail.profilepic, { expires: 1, secure: true, sameSite: 'None' });
       Cookies.set('bio', json.user_detail.bio, { expires: 1, secure: true, sameSite: 'None' });
       Cookies.set('skills', json.user_detail.skills, { expires: 1, secure: true, sameSite: 'None' });
-
       setLoadingBarProgress(100);
+      // Re-register with socket after login
+      socket.emit('registerUser', json.userid);
       return json;
     } catch (error) {
       console.log("Signin error:", error);
@@ -125,7 +171,7 @@ const Api = (props) => {
     }
   };
 
-  // ✅ Login
+  // ── Login ─────────────────────────────────────────────────────
   const login_fxn = async (username, password) => {
     setLoadingBarProgress(30);
     setLoginLoading(true);
@@ -136,9 +182,7 @@ const Api = (props) => {
         body: JSON.stringify({ username, password }),
         credentials: 'include',
       });
-
       setLoadingBarProgress(60);
-
       if (response.status === 401 || response.status === 500) {
         const errorData = await response.json();
         alert(`Error: ${errorData.message || 'Something went wrong'}`);
@@ -146,10 +190,8 @@ const Api = (props) => {
         setLoginLoading(false);
         return errorData.value;
       }
-
       const json = await response.json();
       setauthdata(json);
-
       Cookies.set('auth-token', json.authtoken, { expires: 1, secure: true, sameSite: 'None' });
       Cookies.set('userid', json.userid, { expires: 1, secure: true, sameSite: 'None' });
       Cookies.set('username', json.user_detail.username, { expires: 1, secure: true, sameSite: 'None' });
@@ -158,8 +200,9 @@ const Api = (props) => {
       Cookies.set('profile', json.user_detail.profilepic, { expires: 1, secure: true, sameSite: 'None' });
       Cookies.set('bio', json.user_detail.bio, { expires: 1, secure: true, sameSite: 'None' });
       Cookies.set('skills', json.user_detail.skills, { expires: 1, secure: true, sameSite: 'None' });
-
       setLoadingBarProgress(100);
+      // Re-register with socket after login
+      socket.emit('registerUser', json.userid);
       alert('Login successful!');
       return json;
     } catch (error) {
@@ -170,8 +213,8 @@ const Api = (props) => {
     }
   };
 
-  // ✅ Posts
-  const getallpost = async () => {
+  // ── Posts ─────────────────────────────────────────────────────
+  const getallpost = useCallback(async () => {
     setLoadingBarProgress(20);
     setPostLoading(true);
     try {
@@ -180,15 +223,15 @@ const Api = (props) => {
       const data = await response.json();
       setLoadingBarProgress(100);
       return data;
-    } catch (error) { 
-      console.log(error); 
+    } catch (error) {
+      console.log(error);
       setLoadingBarProgress(100);
     } finally {
       setPostLoading(false);
     }
-  };
+  }, []);
 
-  const idtouser = async (ids) => {
+  const idtouser = useCallback(async (ids) => {
     try {
       const response = await fetch(`${host}/api/auth/idtouser`, {
         method: 'POST',
@@ -197,7 +240,7 @@ const Api = (props) => {
       });
       return await response.json();
     } catch (error) { console.log(error); }
-  };
+  }, []);
 
   const likepost = async (postid) => {
     try {
@@ -218,11 +261,8 @@ const Api = (props) => {
     try {
       const response = await fetch(`${host}/api/post/getcomment/${postid}`, { credentials: 'include' });
       return await response.json();
-    } catch (error) { 
-      console.log(error); 
-    } finally {
-      setCommentLoading(false);
-    }
+    } catch (error) { console.log(error); }
+    finally { setCommentLoading(false); }
   };
 
   const postcom = async (postid, auth_token, text) => {
@@ -242,11 +282,8 @@ const Api = (props) => {
     try {
       const response = await fetch(`${host}/api/post/getreply/${comment_id}`, { credentials: 'include' });
       return await response.json();
-    } catch (error) { 
-      console.log(error); 
-    } finally {
-      setReplyLoading(false);
-    }
+    } catch (error) { console.log(error); }
+    finally { setReplyLoading(false); }
   };
 
   const postreply = async (comment_id, auth_token, text) => {
@@ -266,11 +303,8 @@ const Api = (props) => {
     try {
       const response = await fetch(`${host}/api/post/selfpost`, { credentials: 'include' });
       return await response.json();
-    } catch (error) { 
-      console.log(error); 
-    } finally {
-      setPostLoading(false);
-    }
+    } catch (error) { console.log(error); }
+    finally { setPostLoading(false); }
   };
 
   const getchat = async (participant) => {
@@ -280,30 +314,27 @@ const Api = (props) => {
       const response = await fetch(`${host}/api/chat/getchat/${participant}`, { credentials: 'include' });
       setLoadingBarProgress(100);
       return await response.json();
-    } catch (error) { 
+    } catch (error) {
       console.log(error);
-      setLoadingBarProgress(100); 
+      setLoadingBarProgress(100);
     } finally {
       setChatLoading(false);
     }
   };
 
-  const userchat = async () => {
+  const userchat = useCallback(async () => {
     setChatLoading(true);
-    setLoadingBarProgress(20);
     try {
       const response = await fetch(`${host}/api/chat/chatuser`, { credentials: 'include' });
       const json = await response.json();
-      console.log("USER CHAT NAMES: ", json);
-      setLoadingBarProgress(100);
-      return json;
-    } catch (error) { 
-      console.log(error); 
-      setLoadingBarProgress(100);
+      return Array.isArray(json) ? json : [];
+    } catch (error) {
+      console.log(error);
+      return [];
     } finally {
       setChatLoading(false);
     }
-  };
+  }, []);
 
   const firstchat = async (participants, mssg) => {
     try {
@@ -350,11 +381,8 @@ const Api = (props) => {
         credentials: 'include'
       });
       return await response.json();
-    } catch (error) { 
-      console.log(error); 
-    } finally {
-      setPostLoading(false);
-    }
+    } catch (error) { console.log(error); }
+    finally { setPostLoading(false); }
   };
 
   const frequest = async (name) => {
@@ -421,14 +449,14 @@ const Api = (props) => {
     } catch (error) { console.log(error); }
   };
 
-  const notification = async () => {
+  const notification = useCallback(async () => {
     try {
       const response = await fetch(`${host}/api/chat/unseen`, { credentials: 'include' });
       const json = await response.json();
       setnchat(json.unseenCount);
       return json;
     } catch (error) { console.log(error); }
-  };
+  }, []);
 
   const delMessage = async (id) => {
     try {
@@ -452,20 +480,35 @@ const Api = (props) => {
     } catch (error) { console.log(error); }
   };
 
-  const profile_following = async () => {
+  const profile_following = useCallback(async () => {
     try {
       const response = await fetch(`${host}/api/follow/followingpic`, { credentials: 'include' });
       return await response.json();
     } catch (error) { console.log(error); }
-  };
+  }, []);
 
-  const only_followers = async () => {
+  const only_followers = useCallback(async () => {
     try {
       const response = await fetch(`${host}/api/follow/nfback`, { credentials: 'include' });
       return await response.json();
     } catch (error) { console.log(error); }
+  }, []);
+
+  // Add this below your existing `unfuser` function:
+  const remfollower = async (id) => {
+    try {
+      const response = await fetch(`${host}/api/follow/removefollower/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+      return await response.json();
+    } catch (error) { console.log(error); }
   };
 
+  // ... 
+
+  // THEN, add `remfollower` to your Context Provider values at the bottom:
   return (
     <ConnectContext.Provider value={{
       authdata, setauthdata, signin, login_fxn, getallpost, idtouser,
@@ -474,10 +517,9 @@ const Api = (props) => {
       searchuser, followname, setfollowname, followpost, frequest,
       nfollow, setnfollow, acceptreq, followreq, setfollowreq,
       rejectreq, currentChat, setcurrentChat, firstchat, reqstatus,
-      unfuser, seenstatus, delMessage, delchat, nchat, setnchat,
+      unfuser, remfollower, seenstatus, delMessage, delchat, nchat, setnchat, // <--- Added remfollower here
       notification, socket, profile_following, only_followers,
-      
-      // ✅ Exposing Loading States
+      chatNotif, setChatNotif,
       loadingBarProgress, setLoadingBarProgress,
       loginLoading, postLoading, chatLoading, commentLoading, replyLoading
     }}>

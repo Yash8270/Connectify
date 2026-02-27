@@ -4,7 +4,7 @@ import ConnectContext from "../context/Connectcontext";
 import Like from "../assets/like.svg";
 import commentss from "../assets/comment.svg";
 import Cookies from "js-cookie";
-import { Loader2 } from "lucide-react"; // Import Loader
+import { Loader2 } from "lucide-react";
 
 const Showcase = () => {
   const inputRef = useRef(null);
@@ -22,7 +22,8 @@ const Showcase = () => {
     postreply,
     profile_following,
     only_followers,
-    // ✅ Load Loading States
+    frequest,        // ✅ Imported to send follow back request
+    remfollower,     // ✅ Imported to remove follower
     postLoading,
     commentLoading,
     replyLoading
@@ -44,6 +45,9 @@ const Showcase = () => {
 
   const [followback, setfollowback] = useState([]);
   const [fpic, setfpic] = useState([]);
+  
+  // ✅ Track who we've sent a follow request to so button says "Requested"
+  const [requestedIds, setRequestedIds] = useState([]); 
 
   const [profile, setProfile] = useState({
     username: "",
@@ -73,33 +77,27 @@ const Showcase = () => {
 
   const SubmitComment = async (postId) => {
     await postcom(postId, authdata.authtoken, comtext.text);
-
     const allcom = await getcom(postId, authdata.authtoken);
     const useridarray = allcom.map((c) => c.userid);
     const usernames = await idtouser(useridarray);
-
     setcom(allcom);
     setcomusers(usernames);
     setcomtext({ text: "" });
     handleClear();
-
     const allpost = await getallpost(authdata.authtoken);
     setposts(allpost);
   };
 
   const Submitreply = async (comment_id) => {
     await postreply(comment_id, authdata.authtoken, replytext.text);
-
     const allreply = await getreply(comment_id, authdata.authtoken);
     const useridarray = allreply.map((r) => r.userid);
     const usernames = await idtouser(useridarray);
-
     setreplyusers(usernames);
     setreplies(allreply);
     setvisible(comment_id);
     setreplytext({ text: "" });
     handleClear();
-
     const allpost = await getallpost(authdata.authtoken);
     setposts(allpost);
   };
@@ -110,14 +108,10 @@ const Showcase = () => {
       setcom([]);
       return;
     }
-
     setActivePostId(postId);
-
-    // The loading state 'commentLoading' is toggled in Api.js inside getcom
     const compost = await getcom(postId, authdata.authtoken);
     const useridarray = compost.map((c) => c.userid);
     const usernames = await idtouser(useridarray);
-
     setcom(compost);
     setcomusers(usernames);
   };
@@ -130,28 +124,46 @@ const Showcase = () => {
       await likepost(post._id, authdata.authtoken);
       setlike(true);
     }
-
     const updated = await getallpost(authdata.authtoken);
     setposts(updated);
   };
 
   const handlereply = async (comment_id) => {
     if (visible === comment_id) return setvisible(null);
-    setvisible(comment_id); // Set visible immediately to show the loading area
-
+    setvisible(comment_id);
     const replydata = await getreply(comment_id, authdata.authtoken);
     const useridarray = replydata.map((r) => r.userid);
     const usernames = await idtouser(useridarray);
-
     setreplies(replydata);
     setreplyusers(usernames);
+  };
+
+  // ✅ Remove Follower Handler
+  const handleRemove = async (id) => {
+    await remfollower(id);
+    // Remove user from the local state list immediately for a snappy UI
+    setfollowback((prev) => prev.filter((f) => f._id !== id));
+  };
+
+// ✅ Follow Back Handler
+  const handleFollowBack = async (username, id) => {
+    const res = await frequest(username);
+    
+    if (res) {
+      // 1. Change button text to "Requested" instantly
+      setRequestedIds((prev) => [...prev, id]);
+
+      // 2. Remove the user from the UI after 2 seconds to clean up the list dynamically
+      setTimeout(() => {
+        setfollowback((prev) => prev.filter((f) => f._id !== id));
+      }, 2000);
+    }
   };
 
   useEffect(() => {
     const fetchPosts = async () => {
       const fetchedPosts = await getallpost(authdata.authtoken);
       setposts(fetchedPosts);
-
       if (fetchedPosts) {
         const useridarray = fetchedPosts.map((p) => p.userid);
         const usernames = await idtouser(useridarray);
@@ -159,13 +171,12 @@ const Showcase = () => {
       }
     };
     fetchPosts();
-  }, [authdata,getallpost, idtouser]); // Removed recursive dependency on getallpost
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
       const following_pics = await profile_following();
       setfpic(following_pics);
-
       const dont_f_back = await only_followers();
       setfollowback(dont_f_back);
     };
@@ -185,7 +196,7 @@ const Showcase = () => {
               <div className="bg-[#1a1a1a] rounded-xl p-6 border border-white/10">
                 <div className="flex flex-col items-center gap-4">
                   <div className="w-28 h-28 rounded-full ring-4 ring-yellow-400 overflow-hidden">
-                    <img src="https://i.pravatar.cc/300" alt="profile" className="w-full h-full object-cover" />
+                    <img src={profile.profilepic || "https://i.pravatar.cc/300"} alt="profile" className="w-full h-full object-cover" />
                   </div>
 
                   <div className="flex items-center gap-10 mt-2">
@@ -238,12 +249,11 @@ const Showcase = () => {
             <div className="flex items-center gap-4 mb-4 overflow-x-auto pb-2 scrollbar-hide">
               {fpic && fpic.length > 0 ? fpic.map((f, i) => (
                 <div key={i} className="w-12 h-12 rounded-full ring-2 ring-yellow-400 overflow-hidden shrink-0">
-                  <img src="https://i.pravatar.cc/300" alt="follow" className="w-full h-full object-cover" />
+                  <img src={f.profilepic || "https://i.pravatar.cc/300"} alt="follow" className="w-full h-full object-cover" />
                 </div>
               )) : <div className="text-gray-400 text-sm">No followers</div>}
             </div>
 
-            {/* ✅ POST LOADING STATE */}
             {postLoading && posts.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20">
                 <Loader2 className="animate-spin text-yellow-400 mb-4" size={48} />
@@ -307,7 +317,6 @@ const Showcase = () => {
                     {activePostId === post._id && (
                       <div className="mt-4 space-y-4 border-t border-white/10 pt-4">
                         
-                        {/* ✅ COMMENT LOADING STATE */}
                         {commentLoading ? (
                            <div className="flex justify-center py-4">
                              <Loader2 className="animate-spin text-yellow-400" size={24} />
@@ -330,7 +339,6 @@ const Showcase = () => {
                                 {/* REPLIES SECTION */}
                                 {visible === c._id && (
                                   <div className="mt-3">
-                                    {/* ✅ REPLY LOADING STATE */}
                                     {replyLoading ? (
                                        <div className="flex items-center gap-2 mb-2 ml-4">
                                           <Loader2 className="animate-spin text-yellow-400" size={16} />
@@ -351,7 +359,6 @@ const Showcase = () => {
                                       </>
                                     )}
 
-                                    {/* Reply Input (Always visible when replies are toggled) */}
                                     <div className="flex gap-2">
                                       <input
                                         placeholder="Reply..."
@@ -379,7 +386,7 @@ const Showcase = () => {
             )}
           </section>
 
-          {/* RIGHT COLUMN (Hidden on Mobile -> Moved to Navbar) */}
+          {/* RIGHT COLUMN */}
           <aside className="hidden lg:block lg:col-span-3">
             <div className="bg-[#1a1a1a] rounded-xl p-4 border border-white/10 sticky top-24">
 
@@ -388,24 +395,48 @@ const Showcase = () => {
               </div>
 
               <div className="space-y-4 max-h-[62vh] overflow-auto pr-2 custom-scrollbar">
-                {followback && followback.length > 0 ? followback.map((f, idx) => (
-                  <div key={idx} className="bg-[#111] rounded-lg p-3 flex items-center gap-3">
+                {followback && followback.length > 0 ? followback.map((f, idx) => {
+                  
+                  const hasRequested = requestedIds.includes(f._id);
 
-                    <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-yellow-400 shrink-0">
-                      <img src="https://i.pravatar.cc/300" alt="rec" className="w-full h-full object-cover" />
-                    </div>
+                  return (
+                    <div key={idx} className="bg-[#111] rounded-lg p-3 flex items-center gap-3">
 
-                    <div className="flex-1 min-w-0">
-                      <div className="font-semibold truncate">{f.username}</div>
-                      <div className="text-sm text-yellow-400">Follows you</div>
-                    </div>
+                      <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-yellow-400 shrink-0">
+                        {/* ✅ Updated to use the profilepic from DB */}
+                        <img src={f.profilepic || "https://i.pravatar.cc/300"} alt="rec" className="w-full h-full object-cover" />
+                      </div>
 
-                    <div className="flex flex-col gap-2 w-32">
-                      <button className="bg-[#333] hover:bg-[#444] rounded-md py-1.5 text-sm transition">Remove</button>
-                      <button className="bg-yellow-400 hover:opacity-90 text-black rounded-md py-1.5 text-sm font-bold transition">Follow Back</button>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold truncate">{f.username}</div>
+                        <div className="text-sm text-yellow-400">Follows you</div>
+                      </div>
+
+                      <div className="flex flex-col gap-2 w-32">
+                        {/* ✅ Remove Button Configured */}
+                        <button 
+                          onClick={() => handleRemove(f._id)}
+                          className="bg-[#333] hover:bg-[#444] rounded-md py-1.5 text-sm transition"
+                        >
+                          Remove
+                        </button>
+                        
+                        {/* ✅ Follow Back Button Configured */}
+                        <button 
+                          onClick={() => handleFollowBack(f.username, f._id)}
+                          disabled={hasRequested}
+                          className={`${
+                            hasRequested 
+                              ? 'bg-gray-600 text-gray-300 cursor-not-allowed' 
+                              : 'bg-yellow-400 hover:opacity-90 text-black'
+                          } rounded-md py-1.5 text-sm font-bold transition`}
+                        >
+                          {hasRequested ? "Requested" : "Follow Back"}
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                )) : <div className="text-gray-400 text-sm">There are no such accounts</div>}
+                  );
+                }) : <div className="text-gray-400 text-sm">There are no such accounts</div>}
               </div>
             </div>
           </aside>

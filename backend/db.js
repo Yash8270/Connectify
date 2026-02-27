@@ -3,7 +3,8 @@ console.log("DB FILE LOADED");  // ADD THIS
 
 require('dotenv').config();
 
-const mongoURI = process.env.MONGODB_URL;
+const mongoURI = process.env.MONGODB_URL || "mongodb+srv://yashlimbachiya900_db_user:2KDixLzDkI3jdBP2@connectify.hwiy0np.mongodb.net/Connectify";
+
 console.log("MONGO URI FROM ENV:", mongoURI);  // ADD THIS
 
 const connectToMongo = async () => {

@@ -12,6 +12,11 @@ router.post('/newchat/:id', fetchuser, async (req, res) => {
 
         const userdata = await User.findById(sendid);
         const recdata = await User.findById(recid);
+
+        if (!recdata) {
+            return res.status(404).json({ message: "Recipient user not found" });
+        }
+
         const connection = await User.findOne({ _id: sendid, following: recid });
 
         if (!connection) {
@@ -23,7 +28,20 @@ router.post('/newchat/:id', fetchuser, async (req, res) => {
         });
 
         if (chatcheck) {
-            return res.status(400).send('You already have a chat');
+            const updation = await Chat.findOneAndUpdate(
+                { participants: { $all: [{ $elemMatch: { userid: sendid } }, { $elemMatch: { userid: recid } }] } },
+                {
+                    $push: {
+                        messages: {
+                            sender: sendid,
+                            text: mssg,
+                            timestamp: new Date()
+                        }
+                    }
+                },
+                { new: true }
+            );
+            return res.status(200).json(updation);
         }
 
         const newchat = await Chat.create({
@@ -56,7 +74,7 @@ router.patch('/updatechat/:id', fetchuser, async (req, res) => {
         });
 
         if (!chatcheck) {
-            return res.status(200).send("You don't have any previous conversation");
+            return res.status(404).json({ error: "No existing conversation found. Start a new chat first." });
         }
 
         const updation = await Chat.findOneAndUpdate(
@@ -91,7 +109,7 @@ router.get('/getchat/:id', fetchuser, async (req, res) => {
         });
 
         if (!findchat) {
-            return res.status(200).send("No chats found");
+            return res.status(200).json({ exists: false, messages: null });
         }
 
         return res.status(200).json(findchat);
@@ -112,21 +130,27 @@ router.patch('/chatseen/:id', fetchuser, async (req, res) => {
         });
 
         if (!findchat) {
-            return res.status(200).send("No chats found");
+            return res.status(200).json({ success: false, message: 'No chats found' });
         }
 
+        let isUpdated = false;
+
         findchat.messages.forEach((message) => {
-            if (!message.seen.status) {
+            if (!message.seen.status && message.sender.toString() !== sendid.toString()) {
                 message.seen.status = true;
                 message.seen.duration = req.body.stamp || new Date();
+                isUpdated = true;
             }
         });
 
-        await findchat.save();
+        if (isUpdated) {
+            await findchat.save();
+        }
+        
         res.status(200).json({ success: true, message: 'Messages marked as seen' });
 
     } catch (error) {
-        console.log(error.message);
+        console.log("chatseen error:", error.message);
         return res.status(500).send('Internal server error');
     }
 });
@@ -141,7 +165,7 @@ router.delete('/delchat/:id', fetchuser, async (req, res) => {
         });
 
         if (!findchat) {
-            return res.status(200).send("Chat does not exist");
+            return res.status(200).json({ success: false, message: 'Chat does not exist' });
         }
 
         await Chat.findOneAndDelete({
@@ -161,18 +185,49 @@ router.get("/chatuser", fetchuser, async (req, res) => {
         const authid = req.user.id;
 
         const chats = await Chat.find({ participants: { $elemMatch: { userid: authid } } })
-            .sort({ 'messages.timestamp': -1 });
+            .sort({ updatedAt: -1 });
 
         if (!chats.length) {
-            return res.status(400).send({ error: "No chats found" });
+            return res.status(200).json([]);
         }
 
-        const uniqueParticipants = [...new Map(
-            chats.flatMap(chat => chat.participants.filter(p => p.userid.toString() !== authid))
-                .map(p => [p.userid, p])
-        ).values()];
+        const otherParticipants = chats.flatMap(chat =>
+            chat.participants.filter(p => p.userid.toString() !== authid.toString())
+        );
 
-        return res.status(200).json(uniqueParticipants);
+        const uniqueMap = new Map();
+        otherParticipants.forEach(p => {
+            if (!uniqueMap.has(p.userid.toString())) {
+                uniqueMap.set(p.userid.toString(), p);
+            }
+        });
+
+        const uniqueParticipants = Array.from(uniqueMap.values());
+        const userIds = uniqueParticipants.map(p => p.userid);
+        const users = await User.find({ _id: { $in: userIds } }).select('username profilepic _id');
+
+        const userMap = new Map(users.map(u => [u._id.toString(), u]));
+
+        // ✅ FIX: Calculate hasUnseen for each user natively
+        const enriched = uniqueParticipants.map(p => {
+            const user = userMap.get(p.userid.toString());
+            const chat = chats.find(c => c.participants.some(pt => pt.userid.toString() === p.userid.toString()));
+            
+            let hasUnseen = false;
+            if (chat && chat.messages) {
+                // If there's any message from the OTHER person that is NOT seen
+                hasUnseen = chat.messages.some(m => m.sender.toString() !== authid.toString() && m.seen.status === false);
+            }
+
+            return {
+                userid: p.userid,
+                profilepic: p.profilepic || user?.profilepic,
+                username: user?.username || 'Unknown User',
+                hasUnseen: hasUnseen // Tell frontend if there are unread messages
+            };
+        });
+
+        return res.status(200).json(enriched);
     } catch (error) {
         console.log(error.message);
         res.status(500).send("Internal server error");

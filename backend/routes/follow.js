@@ -15,9 +15,6 @@ router.get('/selfreq', fetchuser, async (req, res) => {
         const user = await User.findById(authid).select('followRequests');
         const pendingRequests = user.followRequests.filter(request => request.status === 'pending');
 
-        // console.log(pendingRequests);
-
-        
         res.status(200).json(pendingRequests);
 
     } catch(error) {
@@ -69,7 +66,6 @@ router.patch('/followreq/:name', fetchuser, async (req, res) => {
             {new: true}
         );
 
-        // console.log(updateuser);
         res.status(200).json(updateuser);
 
     } catch (error) {
@@ -85,12 +81,10 @@ router.patch('/rejectreq/:id', fetchuser, async (req, res) => {
 
         const user = await User.findOneAndUpdate(
             { _id: authid, "followRequests.from": fid },
-            { $set: { "followRequests.$.status": 'rejected' },
-        }
+            { $set: { "followRequests.$.status": 'rejected' } }
           );
 
           res.status(200).json(user);
-
 
     } catch(error) {
         console.log(error.message);
@@ -109,8 +103,6 @@ router.patch('/addfollower/:id', fetchuser, async (req, res) => {
             { $set: { "followRequests.$.status": 'accepted' },
              $addToSet: {followers: fid}},
           );
-       
-        //  console.log(updateuser); 
 
         const update_followerside = await User.findByIdAndUpdate(
             fid,
@@ -118,7 +110,6 @@ router.patch('/addfollower/:id', fetchuser, async (req, res) => {
             {new: true}
         );
 
-        // console.log(update_followerside);
         res.status(200).json(updateuser);
 
     } catch(error) {
@@ -144,7 +135,6 @@ router.patch('/removefollower/:id', fetchuser, async (req, res) => {
             {new: true}
         );
 
-        // console.log(update_followerside);
         res.json(updateuser);
 
     } catch(error) {
@@ -179,14 +169,12 @@ router.patch('/unfollow/:id', fetchuser, async (req, res) => {
             {new: true}
         );
 
-
         const update_followingside = await User.findByIdAndUpdate(
             fid,
             {$pull: {followers: authid, followRequests: {from: authid}}},
             {new: true}
         );
 
-        // console.log(update_followingside);
         res.json(updateuser);
 
     } catch(error) {
@@ -201,14 +189,13 @@ router.get('/followingpic', fetchuser, async (req, res) => {
 
         const user = await User.findById(authid).populate({
             path: 'following',
-            select: 'profilepic username', // Select only the fields you need
+            select: 'profilepic username',
           });
       
           if (!user) {
             throw new Error('User not found');
           }
       
-          // Extract the following array with profile pictures
           const followingWithProfilePics = user.following.map(followingUser => ({
             username: followingUser.username,
             profilepic: followingUser.profilepic,
@@ -222,33 +209,43 @@ router.get('/followingpic', fetchuser, async (req, res) => {
     }
 });
 
+// ✅ FIXED: now returns _id and filters out users you've already requested
 router.get('/nfback', fetchuser, async (req, res) => {
     try {
         const authid = req.user.id;
 
         const user = await User.findById(authid)
-      .populate({
-        path: 'followers',
-        select: 'profilepic username', // Select only the fields you need
-      })
-      .select('following followers'); // Ensure only necessary fields are fetched
+          .populate({
+            path: 'followers',
+            // ✅ We MUST select followRequests so we can check if a request was already sent
+            select: 'profilepic username _id followRequests', 
+          })
+          .select('following followers');
 
-    if (!user) {
-      throw new Error('User not found');
-    }
+        if (!user) {
+          throw new Error('User not found');
+        }
 
-    // Filter followers who are not in the following array
-    const nonFollowedBackFollowers = user.followers.filter(
-      (follower) => !user.following.includes(follower._id.toString())
-    );
+        // ✅ Filter out followers who we already follow OR have already requested
+        const nonFollowedBackFollowers = user.followers.filter((follower) => {
+            const isNotFollowing = !user.following.map(id => id.toString()).includes(follower._id.toString());
+            
+            // Check if current user (authid) has a pending request in the follower's followRequests array
+            const hasPendingRequest = follower.followRequests && follower.followRequests.some(
+                (req) => req.from.toString() === authid.toString() && req.status === 'pending'
+            );
 
-    // Map the result to extract username and profilepic
-    const followersWithProfilePics = nonFollowedBackFollowers.map((follower) => ({
-      username: follower.username,
-      profilepic: follower.profilepic,
-    }));
+            return isNotFollowing && !hasPendingRequest;
+        });
 
-    res.json(followersWithProfilePics);
+        // Return clean data to frontend
+        const followersWithProfilePics = nonFollowedBackFollowers.map((follower) => ({
+          _id: follower._id,
+          username: follower.username,
+          profilepic: follower.profilepic,
+        }));
+
+        res.json(followersWithProfilePics);
 
     } catch(error) {
         console.log(error.message);
