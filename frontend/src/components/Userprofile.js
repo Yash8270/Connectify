@@ -1,14 +1,14 @@
 import React, { useContext, useEffect, useRef, useState, useCallback } from "react";
 import ConnectContext from "../context/Connectcontext";
-import { useParams, useNavigate } from "react-router-dom"; // ✅ added useNavigate
-import { FiSend } from "react-icons/fi"; // ✅ icon for Message button
+import { useParams, useNavigate } from "react-router-dom"; 
+import { FiSend } from "react-icons/fi"; 
+import { Heart } from "lucide-react"; // ✅ Imported dynamic Heart icon
 
-import Like from "../assets/like.svg";
 import commentss from "../assets/comment.svg";
 
 const Userprofile = () => {
   const { userid } = useParams();
-  const navigate = useNavigate(); // ✅
+  const navigate = useNavigate();
 
   const [profile, setProfile] = useState({
     username: "",
@@ -97,20 +97,31 @@ const Userprofile = () => {
     else setPosts(fetched);
   }, [fstatus, profile.username, followpost]);
 
-  // ── Like ──────────────────────────────────────────────────────
-  const handleLike = async (post) => {
+  // ✅ Instagram-style Optimistic Like Update ────────────────────
+  const handleLike = async (post, isLiked) => {
+    // Optimistic UI Update
+    setPosts((prev) =>
+      prev.map((p) => {
+        if (p._id === post._id) {
+          const updatedLikes = isLiked
+            ? p.likes.filter((id) => String(id) !== String(authdata?.userid))
+            : [...p.likes, authdata?.userid];
+          return { ...p, likes: updatedLikes };
+        }
+        return p;
+      })
+    );
+
+    // API Call
     try {
-      const hasLiked =
-        Array.isArray(post.likes) && authdata?.userid
-          ? post.likes.includes(authdata.userid)
-          : false;
-
-      if (hasLiked) await dislikepost(post._id, authdata.authtoken);
-      else await likepost(post._id, authdata.authtoken);
-
-      await loadUserPosts();
+      if (isLiked) {
+        await dislikepost(post._id, authdata.authtoken);
+      } else {
+        await likepost(post._id, authdata.authtoken);
+      }
     } catch (error) {
       console.error("handleLike error:", error);
+      await loadUserPosts(); // Revert on failure
     }
   };
 
@@ -178,8 +189,6 @@ const Userprofile = () => {
   };
 
   // ── Message button → navigate to Chat page ────────────────────
-  // Pass the target user's info via location.state so Chat.js can
-  // auto-select them and load (or initialise) the conversation.
   const handleMessageClick = () => {
     navigate(`/chat/${authdata?.userid}`, {
       state: {
@@ -209,7 +218,7 @@ const Userprofile = () => {
             <div className="flex flex-col items-center">
               <div className="w-28 h-28 rounded-full overflow-hidden ring-4 ring-yellow-400">
                 <img
-                  src="https://i.pravatar.cc/300"
+                  src={profile.profilepic || "https://i.pravatar.cc/300"}
                   alt="profile"
                   className="w-full h-full object-cover"
                 />
@@ -231,7 +240,7 @@ const Userprofile = () => {
                   {fstatus}
                 </button>
 
-                {/* ✅ Message → navigates to Chat page with this user pre-selected */}
+                {/* Message */}
                 <button
                   onClick={handleMessageClick}
                   className="py-2 px-4 rounded-full bg-[#333] hover:bg-[#444] border border-white/10 transition flex items-center gap-2 text-sm font-semibold"
@@ -249,11 +258,11 @@ const Userprofile = () => {
                 <div className="text-xs text-gray-400">Posts</div>
               </div>
               <div>
-                <div className="text-xl font-bold">{profile.followers.length}</div>
+                <div className="text-xl font-bold">{profile.followers?.length || 0}</div>
                 <div className="text-xs text-gray-400">Followers</div>
               </div>
               <div>
-                <div className="text-xl font-bold">{profile.following.length}</div>
+                <div className="text-xl font-bold">{profile.following?.length || 0}</div>
                 <div className="text-xs text-gray-400">Following</div>
               </div>
             </div>
@@ -288,67 +297,82 @@ const Userprofile = () => {
               Follow {profile.username} to see their posts
             </div>
           ) : posts.length > 0 ? (
-            posts.map((post, index) => (
-              <div key={index} className="bg-[#1a1a1a] rounded-2xl p-4 mb-6 border border-white/10">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-yellow-400">
-                    <img
-                      src="https://i.pravatar.cc/300"
-                      alt="profile"
-                      className="w-full h-full object-cover"
-                    />
+            posts.map((post, index) => {
+              // ✅ Determine if the current user has liked this specific post
+              const isLiked = post.likes?.some((id) => String(id) === String(authdata?.userid));
+
+              return (
+                <div key={index} className="bg-[#1a1a1a] rounded-2xl p-4 mb-6 border border-white/10">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-yellow-400">
+                      <img
+                        src={profile.profilepic || "https://i.pravatar.cc/300"}
+                        alt="profile"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="text-lg font-semibold">{profile.username}</div>
                   </div>
-                  <div className="text-lg font-semibold">{profile.username}</div>
-                </div>
 
-                <div className="font-semibold mb-2 text-gray-200">{post.description}</div>
+                  <div className="font-semibold mb-2 text-gray-200">{post.description}</div>
 
-                <div className="w-full rounded-xl overflow-hidden">
-                  {post.image ? (
-                    <img
-                      src={post.image}
-                      className="w-full object-cover max-h-[66vh] border border-black/40"
-                      alt=""
-                    />
-                  ) : (
-                    <div className="text-gray-400 py-10 text-center bg-black/20">No Image</div>
-                  )}
-                </div>
-
-                <div className="flex items-center mt-3 gap-6">
-                  <div
-                    className="flex items-center gap-2 cursor-pointer text-sm"
-                    onClick={() => handleLike(post)}
-                  >
-                    <img src={Like} alt="" className="w-5 h-5" />
-                    {post.likes.length}
+                  <div className="w-full rounded-xl overflow-hidden">
+                    {post.image ? (
+                      <img
+                        src={post.image}
+                        className="w-full object-cover max-h-[66vh] border border-black/40 cursor-pointer select-none"
+                        alt=""
+                        onDoubleClick={() => { if (!isLiked) handleLike(post, false); }} // ✅ Double tap to like
+                      />
+                    ) : (
+                      <div className="text-gray-400 py-10 text-center bg-black/20">No Image</div>
+                    )}
                   </div>
-                  <div
-                    className="flex items-center gap-2 cursor-pointer text-sm"
-                    onClick={() => handleCommentClick(post._id)}
-                  >
-                    <img src={commentss} alt="" className="w-5 h-5" />
-                    {post.comments.length}
-                  </div>
-                </div>
 
-                {activePostId === post._id && (
-                  <div className="mt-4 flex gap-2">
-                    <input
-                      placeholder="Write a comment..."
-                      onChange={(e) => setComText({ text: e.target.value })}
-                      className="flex-1 bg-[#111] px-4 py-2 rounded-full border border-white/10 focus:outline-none focus:border-yellow-400"
-                    />
-                    <button
-                      onClick={() => SubmitComment(post._id)}
-                      className="bg-yellow-400 text-black px-4 py-2 rounded-full font-semibold hover:opacity-90"
+                  <div className="flex items-center mt-3 gap-6">
+                    <div className="flex items-center gap-2">
+                      <button 
+                        onClick={() => handleLike(post, isLiked)}
+                        className="transition transform active:scale-75"
+                      >
+                        <Heart 
+                          className={`w-6 h-6 transition-colors duration-200 ${
+                            isLiked 
+                              ? "fill-yellow-400 text-yellow-400" 
+                              : "text-white hover:text-gray-300"
+                          }`} 
+                        />
+                      </button>
+                      <div className="font-semibold">{post.likes?.length || 0}</div>
+                    </div>
+                    
+                    <button 
+                      className="flex items-center gap-2 transition hover:opacity-80 text-sm"
+                      onClick={() => handleCommentClick(post._id)}
                     >
-                      Send
+                      <img src={commentss} alt="" className="w-6 h-6" />
+                      <span className="font-semibold">{post.comments?.length || 0}</span>
                     </button>
                   </div>
-                )}
-              </div>
-            ))
+
+                  {activePostId === post._id && (
+                    <div className="mt-4 flex gap-2">
+                      <input
+                        placeholder="Write a comment..."
+                        onChange={(e) => setComText({ text: e.target.value })}
+                        className="flex-1 bg-[#111] px-4 py-2 rounded-full border border-white/10 focus:outline-none focus:border-yellow-400"
+                      />
+                      <button
+                        onClick={() => SubmitComment(post._id)}
+                        className="bg-yellow-400 text-black px-4 py-2 rounded-full font-semibold hover:opacity-90"
+                      >
+                        Send
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })
           ) : (
             <div className="bg-[#1a1a1a] p-8 text-center rounded-2xl text-gray-400 border border-white/10">
               {postMessage}
@@ -413,7 +437,7 @@ const Userprofile = () => {
                       </div>
                     ))
                   ) : (
-                    <div className="text-gray-400">No comments yet</div>
+                    <div className="text-gray-400 text-sm">No comments yet</div>
                   )}
                 </>
               )}
