@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState, useRef, useCallback } from "react";
 import ConnectContext from "../context/Connectcontext";
-import { IoEllipsisVertical, IoSearch } from "react-icons/io5";
+import { IoEllipsisVertical, IoSearch, IoMenu } from "react-icons/io5";
 import { FiSend } from "react-icons/fi";
 import { Loader2 } from "lucide-react";
 import { useLocation } from "react-router-dom";
@@ -51,7 +51,6 @@ const formatDateSeparator = (dateString) => {
   return date.toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' }); 
 };
 
-// ── Normalize any ID to a plain string for comparison ─────────────
 const sid = (v) => (v ? v.toString().trim() : "");
 
 const Chat = () => {
@@ -96,6 +95,51 @@ const Chat = () => {
     authdataRef.current = authdata;
   }, [authdata]);
 
+  // Moved markSeen UP so handleUserClick can use it as a dependency
+  const markSeen = useCallback(async (userId) => {
+    try {
+      await seenstatus(userId, new Date().toISOString());
+      await notification(); 
+      socket?.emit("seen", {
+        userid: sid(authdata?.userid),
+        receiverid: sid(userId),
+        seen: true,
+      });
+    } catch (err) {
+      console.error("markSeen error:", err);
+    }
+  }, [seenstatus, notification, socket, authdata?.userid]);
+
+  // Wrapped handleUserClick in useCallback
+  const handleUserClick = useCallback(async (u) => {
+    const userId = u._id || u.userid;
+    setSelectedUser({ ...u, _id: userId });
+    setDropdownOpen(null);
+    setLoadingMessages(true);
+    setMessages([]);
+    setChatExists(false);
+
+    setChatUsers(prev => prev.map(user => 
+      sid(user.userid || user._id) === sid(userId) ? { ...user, hasUnseen: false } : user
+    ));
+
+    try {
+      const chatData = await getchat(userId);
+      if (chatData && chatData.messages && chatData.messages.length > 0) {
+        setMessages(chatData.messages);
+        setChatExists(true);
+        markSeen(userId);
+      } else {
+        setMessages([]);
+        setChatExists(false);
+      }
+    } catch (error) {
+      console.log("Error loading chat", error);
+    } finally {
+      setLoadingMessages(false);
+    }
+  }, [getchat, markSeen]);
+  
   const scrollToBottom = () => {
     msgEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -115,16 +159,11 @@ const Chat = () => {
     didAutoSelect.current = true;
     const t = setTimeout(() => handleUserClick(incoming), 400);
     return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.state]);
+  }, [location.state, handleUserClick]);
 
-  // ─────────────────────────────────────────────────────────────
-  // ── SOCKET LISTENERS ──────────────────────────────────────────
-  // ─────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!socket) return;
 
-    // 1. ── Real-time incoming message ─────────────────────────
     const handleNewMessage = (data) => {
       const currentUser = selectedUserRef.current;
       const myId = sid(authdataRef.current?.userid);
@@ -141,7 +180,6 @@ const Chat = () => {
           },
         ]);
         
-        // ✅ Tell DB it is seen, THEN sync global notifications instantly
         seenstatus(sid(currentUser._id), new Date().toISOString()).then(() => {
           notification(); 
         });
@@ -162,15 +200,12 @@ const Chat = () => {
           }
           return prev; 
         });
-
-        // ✅ If chat is closed, sync notification instantly
         notification();
       }
 
       setTypingUsers((prev) => ({ ...prev, [senderId]: false }));
     };
 
-    // 2. ── Typing status ──────────────────────────────────────
     const handleTypingStatus = (data) => {
       setTypingUsers((prev) => ({
         ...prev,
@@ -178,7 +213,6 @@ const Chat = () => {
       }));
     };
 
-    // 3. ── Seen receipt ───────────────────────────────────────
     const handleSeenStatus = (data) => {
       const currentUser = selectedUserRef.current;
       const myId = sid(authdataRef.current?.userid);
@@ -202,53 +236,8 @@ const Chat = () => {
       socket.off("TypingStatus", handleTypingStatus);
       socket.off("seen_status", handleSeenStatus);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [socket]); 
-
-  // ── Helper: mark seen in DB + socket ─────────────────────────
-  const markSeen = useCallback(async (userId) => {
-    try {
-      await seenstatus(userId, new Date().toISOString());
-      await notification(); // ✅ Updates badge globally
-      socket?.emit("seen", {
-        userid: sid(authdata?.userid),
-        receiverid: sid(userId),
-        seen: true,
-      });
-    } catch (err) {
-      console.error("markSeen error:", err);
-    }
-  }, [seenstatus, notification, socket, authdata?.userid]);
-
-  // ── Open a conversation ───────────────────────────────────────
-  const handleUserClick = async (u) => {
-    const userId = u._id || u.userid;
-    setSelectedUser({ ...u, _id: userId });
-    setDropdownOpen(null);
-    setLoadingMessages(true);
-    setMessages([]);
-    setChatExists(false);
-
-    setChatUsers(prev => prev.map(user => 
-      sid(user.userid || user._id) === sid(userId) ? { ...user, hasUnseen: false } : user
-    ));
-
-    try {
-      const chatData = await getchat(userId);
-      if (chatData && chatData.messages && chatData.messages.length > 0) {
-        setMessages(chatData.messages);
-        setChatExists(true);
-        markSeen(userId); // ✅ Executes update function
-      } else {
-        setMessages([]);
-        setChatExists(false);
-      }
-    } catch (error) {
-      console.log("Error loading chat", error);
-    } finally {
-      setLoadingMessages(false);
-    }
-  };
+  // Added notification and seenstatus to dependencies
+  }, [socket, notification, seenstatus]); 
 
   const handleTyping = (e) => {
     setText(e.target.value);
@@ -362,8 +351,6 @@ const Chat = () => {
       setChatExists(false);
     }
     setDropdownOpen(null);
-    
-    // ✅ Refresh global notifications if an unread chat was deleted
     notification(); 
   };
 
@@ -381,8 +368,23 @@ const Chat = () => {
     <div className="min-h-screen bg-[#0f0f0f] -mt-20 pt-28 px-4 md:px-10 pb-6 flex gap-6 text-white h-screen">
 
       {/* ── LEFT SIDEBAR ─────────────────────────────────────── */}
-      <div className="w-full md:w-[320px] flex flex-col bg-[#1a1a1a] rounded-xl overflow-hidden border border-white/10 h-[80vh] shadow-xl">
+      <div className={`w-full md:w-[320px] flex-col bg-[#1a1a1a] rounded-xl overflow-hidden border border-white/10 h-[80vh] shadow-xl ${selectedUser ? "hidden md:flex" : "flex"}`}>
         <div className="p-4 bg-[#1a1a1a] border-b border-white/10 shrink-0">
+          
+          <div className="flex items-center gap-3 mb-4">
+            <img
+              src={authdata?.profilepic || "https://i.pravatar.cc/150"}
+              alt="My Profile"
+              className="w-10 h-10 rounded-full object-cover ring-2 ring-white/10"
+            />
+            <div>
+              <div className="text-sm font-bold text-white truncate">
+                {authdata?.username || "My Profile"}
+              </div>
+              {/* <div className="text-xs text-green-400 font-medium">Online</div> */}
+            </div>
+          </div>
+
           <div className="relative">
             <IoSearch className="absolute left-3 top-3 text-gray-400 text-xl" />
             <input
@@ -500,8 +502,17 @@ const Chat = () => {
       >
         {selectedUser ? (
           <>
-            <div className="px-6 py-4 bg-[#1a1a1a] border-b border-white/10 flex items-center justify-between shrink-0 shadow-sm z-10">
-              <div className="flex items-center gap-4">
+            <div className="px-4 md:px-6 py-4 bg-[#1a1a1a] border-b border-white/10 flex items-center justify-between shrink-0 shadow-sm z-10">
+              <div className="flex items-center gap-3 md:gap-4">
+                {/* ── MOBILE MENU BUTTON TO VIEW ALL CHATS ── */}
+                <button
+                  className="md:hidden text-gray-400 hover:text-yellow-400 transition p-1 -ml-1"
+                  onClick={() => setSelectedUser(null)}
+                  title="View all chats"
+                >
+                  <IoMenu size={26} />
+                </button>
+
                 <img
                   src={selectedUser.profilepic || "https://i.pravatar.cc/150"}
                   className="w-10 h-10 rounded-full bg-gray-700 object-cover"
@@ -528,13 +539,6 @@ const Chat = () => {
                   )}
                 </div>
               </div>
-
-              <button
-                className="md:hidden text-gray-400 hover:text-white transition"
-                onClick={() => setSelectedUser(null)}
-              >
-                ✕
-              </button>
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-[#0d0d0d]/50 scrollbar-thin scrollbar-thumb-gray-800">
