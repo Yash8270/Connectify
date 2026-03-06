@@ -20,6 +20,7 @@ const Shownav = () => {
     followreq,
     notification,
     only_followers,
+    logout_fxn,
   } = context;
 
   const [showPostModal, setShowPostModal] = useState(false);
@@ -112,10 +113,10 @@ const Shownav = () => {
   const togglePostModal = () => setShowPostModal((s) => !s);
   const toggleReqModal = () => setShowReqModal((s) => !s);
 
-  const handleCookie = () => {
-    Object.keys(Cookies.get()).forEach((name) => Cookies.remove(name));
+  const handleCookie = async () => {
     closeSidebar();
-    navigate("/");
+    await logout_fxn(); // clears HttpOnly auth-token via server + resets authdata
+    navigate("/");      // ProtectedRoute will redirect to /login on next protected visit
   };
 
   return (

@@ -557,9 +557,26 @@ const Api = (props) => {
     } catch (error) { console.log(error); }
   };
 
+  // ✅ LOGOUT: Calls backend to clear HttpOnly cookies (JS cannot do this itself),
+  // then clears display cookies and resets authdata so ProtectedRoute redirects to login.
+  const logout_fxn = async () => {
+    try {
+      await fetch(`${host}/api/auth/logout`, {
+        method: 'POST',
+        credentials: 'include', // sends the HttpOnly cookie so server can clear it
+      });
+    } catch (err) {
+      console.log('Logout error:', err);
+    } finally {
+      // Always clear local state regardless of server response
+      ['username', 'profile', 'followers', 'following', 'bio', 'skills'].forEach(k => Cookies.remove(k));
+      setauthdata(null);
+    }
+  };
+
   return (
     <ConnectContext.Provider value={{
-      authdata, setauthdata, signin, login_fxn, getallpost, idtouser,
+      authdata, setauthdata, signin, login_fxn, logout_fxn, getallpost, idtouser,
       likepost, dislikepost, getcom, postcom, getreply, postreply,
       selfpost, getchat, userchat, chatting, cloudimage,
       searchuser, followname, setfollowname, followpost, frequest,

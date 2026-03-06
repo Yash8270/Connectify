@@ -188,4 +188,22 @@ router.post("/idtouser", async (req, res) => {
   }
 });
 
+
+// ✅ LOGOUT: Clears the HttpOnly auth-token cookie server-side.
+// JS cannot delete HttpOnly cookies — only the server can by setting maxAge:0.
+router.post("/logout", async (req, res) => {
+  try {
+    const clearedOptions = {
+      ...cookieOptions,
+      maxAge: 0, // Instantly expire both cookies
+    };
+    res.cookie('auth-token', '', clearedOptions);
+    res.cookie('userid', '', clearedOptions);
+    return res.status(200).json({ success: true });
+  } catch (error) {
+    console.log("/logout error:", error.message);
+    return res.status(500).send("Internal server error");
+  }
+});
+
 module.exports = router;
