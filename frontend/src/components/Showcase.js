@@ -24,8 +24,6 @@ const Showcase = () => {
     frequest,
     remfollower,
     postLoading,
-    commentLoading,
-    replyLoading
   } = context;
 
   const [posts, setposts] = useState([]);
@@ -43,8 +41,11 @@ const Showcase = () => {
 
   const [followback, setfollowback] = useState([]);
   const [fpic, setfpic] = useState([]);
-  
   const [requestedIds, setRequestedIds] = useState([]); 
+
+  // ✅ NEW LOCAL LOADING STATES TO PREVENT FLASHING
+  const [isFetchingComments, setIsFetchingComments] = useState(false);
+  const [isFetchingReplies, setIsFetchingReplies] = useState(false);
 
   const [profile, setProfile] = useState({
     username: "",
@@ -73,30 +74,46 @@ const Showcase = () => {
   };
 
   const SubmitComment = async (postId) => {
-    await postcom(postId, authdata.authtoken, comtext.text);
-    const allcom = await getcom(postId, authdata.authtoken);
-    const useridarray = allcom.map((c) => c.userid);
-    const usernames = await idtouser(useridarray);
-    setcom(allcom);
-    setcomusers(usernames);
-    setcomtext({ text: "" });
-    handleClear();
-    const allpost = await getallpost(authdata.authtoken);
-    setposts(allpost);
+    if (!comtext.text.trim()) return;
+    setIsFetchingComments(true); // Keep loading state true until fully done
+    try {
+      await postcom(postId, authdata.authtoken, comtext.text);
+      const allcom = await getcom(postId, authdata.authtoken);
+      if (allcom && allcom.length > 0) {
+        const useridarray = allcom.map((c) => c.userid);
+        const usernames = await idtouser(useridarray);
+        setcom(allcom);
+        setcomusers(usernames);
+      }
+      setcomtext({ text: "" });
+      handleClear();
+      const allpost = await getallpost();
+      setposts(Array.isArray(allpost) ? allpost : []);
+    } finally {
+      setIsFetchingComments(false);
+    }
   };
 
   const Submitreply = async (comment_id) => {
-    await postreply(comment_id, authdata.authtoken, replytext.text);
-    const allreply = await getreply(comment_id, authdata.authtoken);
-    const useridarray = allreply.map((r) => r.userid);
-    const usernames = await idtouser(useridarray);
-    setreplyusers(usernames);
-    setreplies(allreply);
-    setvisible(comment_id);
-    setreplytext({ text: "" });
-    handleClear();
-    const allpost = await getallpost(authdata.authtoken);
-    setposts(allpost);
+    if (!replytext.text.trim()) return;
+    setIsFetchingReplies(true); // Keep loading state true until fully done
+    try {
+      await postreply(comment_id, authdata.authtoken, replytext.text);
+      const allreply = await getreply(comment_id, authdata.authtoken);
+      if (allreply && allreply.length > 0) {
+        const useridarray = allreply.map((r) => r.userid);
+        const usernames = await idtouser(useridarray);
+        setreplyusers(usernames);
+        setreplies(allreply);
+      }
+      setvisible(comment_id);
+      setreplytext({ text: "" });
+      handleClear();
+      const allpost = await getallpost();
+      setposts(Array.isArray(allpost) ? allpost : []);
+    } finally {
+      setIsFetchingReplies(false);
+    }
   };
 
   const handleCommentClick = async (postId) => {
@@ -106,29 +123,62 @@ const Showcase = () => {
       return;
     }
     setActivePostId(postId);
-    const compost = await getcom(postId, authdata.authtoken);
-    const useridarray = compost.map((c) => c.userid);
-    const usernames = await idtouser(useridarray);
-    setcom(compost);
-    setcomusers(usernames);
+    setIsFetchingComments(true); // ✅ START FULL LOADING
+
+    try {
+      const compost = await getcom(postId, authdata.authtoken);
+      if (compost && compost.length > 0) {
+        const useridarray = compost.map((c) => c.userid);
+        const usernames = await idtouser(useridarray);
+        setcom(compost);
+        setcomusers(usernames);
+      } else {
+        setcom([]);
+        setcomusers({ usernames: [] });
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsFetchingComments(false); // ✅ STOP LOADING AFTER USERNAMES ARE FETCHED
+    }
   };
 
-  // ✅ Updated to take specific post and check if it's currently liked
+  const handlereply = async (comment_id) => {
+    if (visible === comment_id) return setvisible(null);
+    setvisible(comment_id);
+    setIsFetchingReplies(true); // ✅ START FULL LOADING
+    
+    try {
+      const replydata = await getreply(comment_id, authdata.authtoken);
+      if (replydata && replydata.length > 0) {
+        const useridarray = replydata.map((r) => r.userid);
+        const usernames = await idtouser(useridarray);
+        setreplies(replydata);
+        setreplyusers(usernames);
+      } else {
+        setreplies([]);
+        setreplyusers({ usernames: [] });
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsFetchingReplies(false); // ✅ STOP LOADING AFTER USERNAMES ARE FETCHED
+    }
+  };
+
   const handlelike = async (post, isLiked) => {
-    // 1. Optimistic UI update: Instantly change the like status locally without waiting for the server
     setposts((prevPosts) => 
       prevPosts.map((p) => {
         if (p._id === post._id) {
           const updatedLikes = isLiked
-            ? p.likes.filter((id) => String(id) !== String(authdata?.userid)) // Remove like
-            : [...p.likes, authdata?.userid]; // Add like
+            ? p.likes.filter((id) => String(id) !== String(authdata?.userid))
+            : [...p.likes, authdata?.userid];
           return { ...p, likes: updatedLikes };
         }
         return p;
       })
     );
 
-    // 2. Perform background API call
     try {
       if (isLiked) {
         await dislikepost(post._id, authdata.authtoken);
@@ -136,21 +186,10 @@ const Showcase = () => {
         await likepost(post._id, authdata.authtoken);
       }
     } catch (error) {
-      // 3. Fallback: If API fails, silently re-fetch to fix the UI
       console.error("Like action failed", error);
-      const updated = await getallpost(authdata.authtoken);
-      setposts(updated);
+      const updated = await getallpost();
+      setposts(Array.isArray(updated) ? updated : []);
     }
-  };
-
-  const handlereply = async (comment_id) => {
-    if (visible === comment_id) return setvisible(null);
-    setvisible(comment_id);
-    const replydata = await getreply(comment_id, authdata.authtoken);
-    const useridarray = replydata.map((r) => r.userid);
-    const usernames = await idtouser(useridarray);
-    setreplies(replydata);
-    setreplyusers(usernames);
   };
 
   const handleRemove = async (id) => {
@@ -160,7 +199,6 @@ const Showcase = () => {
 
   const handleFollowBack = async (username, id) => {
     const res = await frequest(username);
-    
     if (res) {
       setRequestedIds((prev) => [...prev, id]);
       setTimeout(() => {
@@ -170,12 +208,9 @@ const Showcase = () => {
   };
 
   useEffect(() => {
-    // ✅ Wait until /me has resolved and we have a valid session
     if (!authdata?.userid) return;
-
     const fetchPosts = async () => {
       const fetchedPosts = await getallpost();
-      // ✅ Guard: API might return an error object on 401 — always ensure array
       const safePosts = Array.isArray(fetchedPosts) ? fetchedPosts : [];
       setposts(safePosts);
       if (safePosts.length > 0) {
@@ -188,9 +223,7 @@ const Showcase = () => {
   }, [authdata?.userid, getallpost, idtouser]);
 
   useEffect(() => {
-    // ✅ Wait until session is restored
     if (!authdata?.userid) return;
-
     const fetchData = async () => {
       const following_pics = await profile_following();
       setfpic(Array.isArray(following_pics) ? following_pics : []);
@@ -202,35 +235,29 @@ const Showcase = () => {
 
   return (
     <main className="min-h-screen bg-[#0f0f0f] text-white -mt-20 pt-20">
-      
       <div className="max-w-[1600px] mx-auto px-4 md:px-6 pb-10">
         <div className="grid grid-cols-12 gap-6">
           
           {/* LEFT PROFILE (Hidden on Mobile) */}
           <aside className="hidden lg:block lg:col-span-3">
             <div className="space-y-6 sticky top-24">
-
               <div className="bg-[#1a1a1a] rounded-xl p-6 border border-white/10">
                 <div className="flex flex-col items-center gap-4">
                   <div className="w-28 h-28 rounded-full ring-4 ring-yellow-400 overflow-hidden">
                     <img src={profile.profilepic || "https://i.pravatar.cc/300"} alt="profile" className="w-full h-full object-cover" />
                   </div>
-
                   <div className="flex items-center gap-10 mt-2">
                     <div className="text-center">
                       <div className="text-sm font-bold">{profile.followers}</div>
                       <div className="text-xs text-gray-400">Followers</div>
                     </div>
-
                     <div className="text-center">
                       <div className="text-sm font-bold">{profile.following}</div>
                       <div className="text-xs text-gray-400">Following</div>
                     </div>
                   </div>
-
                   <div className="text-xl font-bold mt-1">{profile.username}</div>
                   <div className="text-sm text-gray-300 text-center">{profile.bio || "No bio available"}</div>
-
                   <Link to={`/profile/${authdata.userid}`} className="w-full">
                     <div className="mt-4 bg-[#222] hover:bg-[#2a2a2a] transition text-center font-bold py-2 rounded-full border border-white/10">
                       My Profile
@@ -242,7 +269,6 @@ const Showcase = () => {
               {/* SKILLS */}
               <div className="bg-[#1a1a1a] rounded-xl p-4 border border-white/10">
                 <div className="text-lg font-bold mb-3">Skills</div>
-
                 <div className="grid grid-cols-1 gap-3">
                   {profile.skills.length > 0 ? (
                     profile.skills.map((s, idx) => (
@@ -262,7 +288,6 @@ const Showcase = () => {
 
           {/* CENTER FEED */}
           <section className="col-span-12 lg:col-span-6">
-
             <div className="flex items-center gap-4 mb-4 overflow-x-auto pl-1 pt-4 pb-2 scrollbar-hide">
               {fpic && fpic.length > 0 ? fpic.map((f, i) => (
                 <div key={i} className="w-12 h-12 rounded-full ring-2 ring-yellow-400 overflow-hidden shrink-0">
@@ -279,21 +304,19 @@ const Showcase = () => {
             ) : (
               <div className="space-y-6">
                 {posts.map((post, index) => {
-                  // ✅ Determine if the current user has liked this specific post
                   const isLiked = post.likes?.some((id) => String(id) === String(authdata?.userid));
 
                   return (
-                    <article key={post._id || index} className="bg-[#1a1a1a] rounded-xl p-6 border border-white/10">
-
+                    <article key={post._id || index} className="bg-[#1a1a1a] rounded-xl p-4 md:p-6 border border-white/10">
                       {/* HEADER */}
-                      <div className="flex items-center gap-4 mb-4">
-                        <div className="w-12 h-12 rounded-full overflow-hidden">
+                      <div className="flex items-center gap-3 md:gap-4 mb-4">
+                        <div className="w-10 h-10 md:w-12 md:h-12 rounded-full overflow-hidden shrink-0">
                           <img src="https://i.pravatar.cc/300" alt="profile" className="w-full h-full object-cover" />
                         </div>
-                        <div className="font-semibold">{users.usernames[index] || "unknown"}</div>
+                        <div className="font-semibold text-sm md:text-base">{users.usernames[index] || "unknown"}</div>
                       </div>
 
-                      <div className="text-gray-200 mb-4">{post.description}</div>
+                      <div className="text-gray-200 text-sm md:text-base mb-4">{post.description}</div>
 
                       {post.image && (
                         <div className="mb-4">
@@ -306,38 +329,39 @@ const Showcase = () => {
                         <div className="flex items-center gap-2">
                           <button 
                             onClick={() => handlelike(post, isLiked)}
-                            className="transition transform active:scale-75"
+                            className="transition transform active:scale-75 shrink-0"
                           >
                             <Heart 
-                              className={`w-6 h-6 transition-colors duration-200 ${
+                              className={`w-5 h-5 md:w-6 md:h-6 transition-colors duration-200 ${
                                 isLiked 
                                   ? "fill-yellow-400 text-yellow-400" 
                                   : "text-white hover:text-gray-300"
                               }`} 
                             />
                           </button>
-                          <div className="font-semibold">{post.likes?.length || 0}</div>
+                          <div className="font-semibold text-sm md:text-base">{post.likes?.length || 0}</div>
                         </div>
 
-                        <button onClick={() => handleCommentClick(post._id)} className="flex items-center gap-2 transition hover:opacity-80">
-                          <img src={commentss} alt="comments" className="w-6 h-6" />
-                          <span className="font-semibold">
+                        <button onClick={() => handleCommentClick(post._id)} className="flex items-center gap-2 transition hover:opacity-80 shrink-0">
+                          <img src={commentss} alt="comments" className="w-5 h-5 md:w-6 md:h-6" />
+                          <span className="font-semibold text-sm md:text-base">
                             {post.comments?.length || 0}
                           </span>
                         </button>
                       </div>
 
-                      {/* COMMENT INPUT */}
-                      <div className="flex items-center gap-3">
+                      {/* COMMENT INPUT (Mobile Fixed) */}
+                      <div className="flex items-center gap-2 md:gap-3">
                         <input
                           ref={inputRef}
                           placeholder="Write a comment"
                           onChange={(e) => setcomtext({ text: e.target.value })}
-                          className="flex-1 bg-[#111] rounded-full py-3 px-4 border border-white/10"
+                          className="flex-1 min-w-0 bg-[#111] rounded-full py-2.5 px-4 md:py-3 border border-white/10 text-sm md:text-base focus:outline-none focus:border-yellow-400"
                         />
                         <button
                           onClick={() => SubmitComment(post._id)}
-                          className="bg-yellow-400 text-black px-4 py-2 rounded-full font-semibold hover:opacity-90 transition"
+                          disabled={!comtext.text.trim() || isFetchingComments}
+                          className="shrink-0 bg-yellow-400 text-black px-4 py-2.5 md:py-3 rounded-full text-sm md:text-base font-semibold hover:opacity-90 transition disabled:opacity-50"
                         >
                           Send
                         </button>
@@ -346,40 +370,38 @@ const Showcase = () => {
                       {/* COMMENTS SECTION */}
                       {activePostId === post._id && (
                         <div className="mt-4 space-y-4 border-t border-white/10 pt-4">
-                          
-                          {commentLoading ? (
+                          {/* ✅ REPLACED commentLoading with isFetchingComments */}
+                          {isFetchingComments ? (
                             <div className="flex justify-center py-4">
                               <Loader2 className="animate-spin text-yellow-400" size={24} />
                             </div>
                           ) : (
                             <>
                               {com.length > 0 ? com.map((c, idx) => (
-                                <div key={idx} className="bg-[#111] p-3 rounded-lg">
-
-                                  <div className="font-semibold text-gray-300 mb-1">
+                                <div key={idx} className="bg-[#111] p-3 md:p-4 rounded-lg">
+                                  <div className="font-semibold text-gray-300 text-sm md:text-base mb-1">
                                     {comusers.usernames[idx] || "user"}
                                   </div>
-
-                                  <div className="text-gray-400 mb-1">{c.text}</div>
-
-                                  <button onClick={() => handlereply(c._id)} className="text-sm text-yellow-400 hover:underline">
+                                  <div className="text-gray-400 text-sm mb-2">{c.text}</div>
+                                  <button onClick={() => handlereply(c._id)} className="text-xs md:text-sm text-yellow-400 hover:underline">
                                     {visible === c._id ? "Hide Replies" : "Show Replies"}
                                   </button>
 
                                   {/* REPLIES SECTION */}
                                   {visible === c._id && (
                                     <div className="mt-3">
-                                      {replyLoading ? (
+                                      {/* ✅ REPLACED replyLoading with isFetchingReplies */}
+                                      {isFetchingReplies ? (
                                         <div className="flex items-center gap-2 mb-2 ml-4">
-                                            <Loader2 className="animate-spin text-yellow-400" size={16} />
+                                            <Loader2 className="animate-spin text-yellow-400" size={14} />
                                             <span className="text-xs text-gray-500">Loading replies...</span>
                                         </div>
                                       ) : (
                                         <>
                                           {replies.length > 0 && (
-                                            <div className="mb-3 space-y-2 text-sm pl-4 border-l-2 border-white/10">
+                                            <div className="mb-3 space-y-2 text-xs md:text-sm pl-4 border-l-2 border-white/10">
                                               {replies.map((r, ridx) => (
-                                                <div key={ridx} className="text-gray-300">
+                                                <div key={ridx} className="text-gray-300 break-words">
                                                   <span className="font-semibold text-gray-400">{replyusers.usernames[ridx] || "user"}:</span>{" "}
                                                   {r.text}
                                                 </div>
@@ -389,15 +411,17 @@ const Showcase = () => {
                                         </>
                                       )}
 
-                                      <div className="flex gap-2">
+                                      {/* REPLY INPUT (Mobile Fixed) */}
+                                      <div className="flex items-center gap-2 mt-2">
                                         <input
                                           placeholder="Reply..."
                                           onChange={(e) => setreplytext({ text: e.target.value })}
-                                          className="flex-1 bg-[#000] rounded-full py-2 px-3 border border-white/10 text-sm focus:outline-none focus:border-yellow-400 transition"
+                                          className="flex-1 min-w-0 bg-[#000] rounded-full py-2 px-3 md:px-4 border border-white/10 text-xs md:text-sm focus:outline-none focus:border-yellow-400 transition"
                                         />
                                         <button
                                           onClick={() => Submitreply(c._id)}
-                                          className="bg-yellow-400 text-black px-4 py-1 rounded-full text-sm font-bold hover:opacity-90 transition"
+                                          disabled={!replytext.text.trim() || isFetchingReplies}
+                                          className="shrink-0 bg-yellow-400 text-black px-3 py-2 md:px-4 rounded-full text-xs md:text-sm font-bold hover:opacity-90 transition disabled:opacity-50"
                                         >
                                           Send
                                         </button>
@@ -420,28 +444,21 @@ const Showcase = () => {
           {/* RIGHT COLUMN */}
           <aside className="hidden lg:block lg:col-span-3">
             <div className="bg-[#1a1a1a] rounded-xl p-4 border border-white/10 sticky top-24">
-
               <div className="font-semibold mb-3 text-gray-400">
                 Accounts You don't follow back
               </div>
-
               <div className="space-y-4 max-h-[62vh] overflow-auto pr-2 custom-scrollbar">
                 {followback && followback.length > 0 ? followback.map((f, idx) => {
-                  
                   const hasRequested = requestedIds.includes(f._id);
-
                   return (
                     <div key={idx} className="bg-[#111] rounded-lg p-2.5 xl:p-3 flex items-center gap-2 xl:gap-3">
-
                       <div className="w-10 h-10 xl:w-12 xl:h-12 rounded-full overflow-hidden ring-2 ring-yellow-400 shrink-0">
                         <img src={f.profilepic || "https://i.pravatar.cc/300"} alt="rec" className="w-full h-full object-cover" />
                       </div>
-
                       <div className="flex-1 min-w-0">
                         <div className="font-semibold text-sm truncate">{f.username}</div>
                         <div className="text-[10px] xl:text-xs text-yellow-400 truncate">Follows you</div>
                       </div>
-
                       <div className="flex flex-col gap-1.5 shrink-0">
                         <button 
                           onClick={() => handleRemove(f._id)}
@@ -449,7 +466,6 @@ const Showcase = () => {
                         >
                           Remove
                         </button>
-                        
                         <button 
                           onClick={() => handleFollowBack(f.username, f._id)}
                           disabled={hasRequested}
