@@ -5,15 +5,7 @@ import { io } from 'socket.io-client';
 
 // ── Single socket instance ────────────────────────────────────────
 // Change this back to the production URL when deploying
-// const socket = io('https://connectify-aml7.onrender.com', {
-//   withCredentials: true,
-//   autoConnect: true,
-//   reconnection: true,
-//   reconnectionAttempts: Infinity,
-//   reconnectionDelay: 1000,
-// });
-
-const socket = io('http://localhost:5000', {
+const socket = io('https://connectify-aml7.onrender.com', {
   withCredentials: true,
   autoConnect: true,
   reconnection: true,
@@ -21,9 +13,17 @@ const socket = io('http://localhost:5000', {
   reconnectionDelay: 1000,
 });
 
+// const socket = io('http://localhost:5000', {
+//   withCredentials: true,
+//   autoConnect: true,
+//   reconnection: true,
+//   reconnectionAttempts: Infinity,
+//   reconnectionDelay: 1000,
+// });
+
 const Api = (props) => {
-  const host = "http://localhost:5000";
-  // const host = "https://connectify-aml7.onrender.com";
+  // const host = "http://localhost:5000";
+  const host = "https://connectify-aml7.onrender.com";
 
   // Auth state — populated by /api/auth/me on mount, or by login_fxn/signin
   // We no longer read the auth token from JS-readable cookies.
