@@ -218,11 +218,14 @@ const Chat = () => {
       const myId = sid(authdataRef.current?.userid);
       if (currentUser && sid(currentUser._id) === sid(data.userid) && data.seen) {
         setMessages((prev) =>
-          prev.map((m) =>
-            sid(m.sender) === myId 
-            ? { ...m, seen: { status: true, duration: new Date().toISOString() } } 
-            : m
-          )
+          prev.map((m) => {
+            // ✅ Only mark messages that were NOT already seen.
+            // If we update all messages, old ones get a fresh duration → "Seen just now"
+            if (sid(m.sender) === myId && m.seen?.status !== true) {
+              return { ...m, seen: { status: true, duration: new Date().toISOString() } };
+            }
+            return m; // already seen — preserve original seen.duration
+          })
         );
       }
     };
