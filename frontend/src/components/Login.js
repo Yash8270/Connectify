@@ -1,5 +1,5 @@
 import React, { useState, useContext } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
 import ConnectContext from "../context/Connectcontext";
 import Pic from "./Pic";
 import { Eye, EyeOff, Loader2 } from "lucide-react"; // Imported Loader2
@@ -22,7 +22,7 @@ const Login = () => {
   };
 
   // ✅ Get login_fxn AND loginLoading state from context
-  const { login_fxn, loginLoading } = useContext(ConnectContext);
+  const { login_fxn, loginLoading, authdata, authLoading } = useContext(ConnectContext);
 
   const [signdata, setsigndata] = useState({
     username: "",
@@ -54,6 +54,11 @@ const Login = () => {
     const res = await login_fxn(logindata.username, logindata.password);
     if (res) navigate(`/showcase/${res.userid}`);
   };
+
+  // ✅ AUTO-REDIRECT: all hooks are above — safe to do early return here
+  if (!authLoading && authdata?.userid) {
+    return <Navigate to={`/showcase/${authdata.userid}`} replace />;
+  }
 
   return (
     <div className="h-[calc(100vh-5rem)] overflow-hidden flex justify-center items-center bg-[#0f0f0f] text-white px-4">

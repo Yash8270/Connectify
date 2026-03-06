@@ -170,27 +170,35 @@ const Showcase = () => {
   };
 
   useEffect(() => {
+    // ✅ Wait until /me has resolved and we have a valid session
+    if (!authdata?.userid) return;
+
     const fetchPosts = async () => {
-      const fetchedPosts = await getallpost(authdata.authtoken);
-      setposts(fetchedPosts);
-      if (fetchedPosts) {
-        const useridarray = fetchedPosts.map((p) => p.userid);
+      const fetchedPosts = await getallpost();
+      // ✅ Guard: API might return an error object on 401 — always ensure array
+      const safePosts = Array.isArray(fetchedPosts) ? fetchedPosts : [];
+      setposts(safePosts);
+      if (safePosts.length > 0) {
+        const useridarray = safePosts.map((p) => p.userid);
         const usernames = await idtouser(useridarray);
         setusers(usernames);
       }
     };
     fetchPosts();
-  }, [authdata.authtoken, getallpost, idtouser]);
+  }, [authdata?.userid, getallpost, idtouser]);
 
   useEffect(() => {
+    // ✅ Wait until session is restored
+    if (!authdata?.userid) return;
+
     const fetchData = async () => {
       const following_pics = await profile_following();
-      setfpic(following_pics);
+      setfpic(Array.isArray(following_pics) ? following_pics : []);
       const dont_f_back = await only_followers();
-      setfollowback(dont_f_back);
+      setfollowback(Array.isArray(dont_f_back) ? dont_f_back : []);
     };
     fetchData();
-  }, [profile_following, only_followers]);
+  }, [authdata?.userid, profile_following, only_followers]);
 
   return (
     <main className="min-h-screen bg-[#0f0f0f] text-white -mt-20 pt-20">

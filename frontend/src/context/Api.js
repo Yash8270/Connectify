@@ -5,15 +5,7 @@ import { io } from 'socket.io-client';
 
 // ── Single socket instance ────────────────────────────────────────
 // Change this back to the production URL when deploying
-const socket = io('https://connectify-aml7.onrender.com', {
-  withCredentials: true,
-  autoConnect: true,
-  reconnection: true,
-  reconnectionAttempts: Infinity,
-  reconnectionDelay: 1000,
-});
-
-// const socket = io('http://localhost:5000', {
+// const socket = io('https://connectify-aml7.onrender.com', {
 //   withCredentials: true,
 //   autoConnect: true,
 //   reconnection: true,
@@ -21,14 +13,23 @@ const socket = io('https://connectify-aml7.onrender.com', {
 //   reconnectionDelay: 1000,
 // });
 
-const Api = (props) => {
-  // const host = "http://localhost:5000";
-  const host = "https://connectify-aml7.onrender.com";
+const socket = io('http://localhost:5000', {
+  withCredentials: true,
+  autoConnect: true,
+  reconnection: true,
+  reconnectionAttempts: Infinity,
+  reconnectionDelay: 1000,
+});
 
-  const [authdata, setauthdata] = useState({
-    authtoken: Cookies.get('auth-token'),
-    userid: Cookies.get('userid'),
-  });
+const Api = (props) => {
+  const host = "http://localhost:5000";
+  // const host = "https://connectify-aml7.onrender.com";
+
+  // Auth state — populated by /api/auth/me on mount, or by login_fxn/signin
+  // We no longer read the auth token from JS-readable cookies.
+  // The real token lives in an HttpOnly cookie; we just keep a copy in state for app use.
+  const [authdata, setauthdata] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true); // true while /me is in-flight
 
   const [searchuser, setsearchuser] = useState([]);
   const [followname, setfollowname] = useState('');
@@ -53,6 +54,44 @@ const Api = (props) => {
   useEffect(() => {
     authdataRef.current = authdata;
   }, [authdata]);
+
+  // ── AUTO-LOGIN on page load ───────────────────────────────────────
+  // Calls /me which reads the HttpOnly auth-token cookie.
+  // If valid → restores session silently. If not → authdata stays null → ProtectedRoute redirects.
+  useEffect(() => {
+    const restoreSession = async () => {
+      try {
+        const response = await fetch(`${host}/api/auth/me`, {
+          method: 'GET',
+          credentials: 'include', // sends the HttpOnly cookie automatically
+        });
+
+        if (response.ok) {
+          const json = await response.json();
+          setauthdata({ authtoken: json.authtoken, userid: json.userid, user_detail: json.user_detail });
+
+          // Keep non-sensitive display info in JS-readable cookies for Navbar/Profile components
+          Cookies.set('username', json.user_detail.username, { expires: 1, sameSite: 'None', secure: true });
+          Cookies.set('profile', json.user_detail.profilepic, { expires: 1, sameSite: 'None', secure: true });
+          Cookies.set('followers', json.user_detail.followers.length, { expires: 1, sameSite: 'None', secure: true });
+          Cookies.set('following', json.user_detail.following.length, { expires: 1, sameSite: 'None', secure: true });
+          Cookies.set('bio', json.user_detail.bio, { expires: 1, sameSite: 'None', secure: true });
+          Cookies.set('skills', json.user_detail.skills, { expires: 1, sameSite: 'None', secure: true });
+        } else {
+          // Cookie expired or invalid — clear display cookies too
+          ['username', 'profile', 'followers', 'following', 'bio', 'skills'].forEach(k => Cookies.remove(k));
+          setauthdata(null);
+        }
+      } catch (err) {
+        console.log('Session restore error:', err);
+        setauthdata(null);
+      } finally {
+        setAuthLoading(false);
+      }
+    };
+
+    restoreSession();
+  }, []); // runs once on mount
 
   // ✅ Get Unseen Count instantly from DB (Memoized)
   const notification = useCallback(async () => {
@@ -174,9 +213,8 @@ const Api = (props) => {
       });
       setLoadingBarProgress(70);
       const json = await response.json();
-      setauthdata(json);
-      Cookies.set('auth-token', json.authtoken, { expires: 1, secure: true, sameSite: 'None' });
-      Cookies.set('userid', json.userid, { expires: 1, secure: true, sameSite: 'None' });
+      setauthdata({ authtoken: json.authtoken, userid: json.userid, user_detail: json.user_detail });
+      // auth-token and userid are now HttpOnly cookies set by the backend — do NOT set them from JS
       Cookies.set('username', json.user_detail.username, { expires: 1, secure: true, sameSite: 'None' });
       Cookies.set('followers', json.user_detail.followers.length, { expires: 1, secure: true, sameSite: 'None' });
       Cookies.set('following', json.user_detail.following.length, { expires: 1, secure: true, sameSite: 'None' });
@@ -215,9 +253,8 @@ const Api = (props) => {
         return errorData.value;
       }
       const json = await response.json();
-      setauthdata(json);
-      Cookies.set('auth-token', json.authtoken, { expires: 1, secure: true, sameSite: 'None' });
-      Cookies.set('userid', json.userid, { expires: 1, secure: true, sameSite: 'None' });
+      setauthdata({ authtoken: json.authtoken, userid: json.userid, user_detail: json.user_detail });
+      // auth-token and userid are now HttpOnly cookies set by the backend — do NOT set them from JS
       Cookies.set('username', json.user_detail.username, { expires: 1, secure: true, sameSite: 'None' });
       Cookies.set('followers', json.user_detail.followers.length, { expires: 1, secure: true, sameSite: 'None' });
       Cookies.set('following', json.user_detail.following.length, { expires: 1, secure: true, sameSite: 'None' });
@@ -532,7 +569,7 @@ const Api = (props) => {
       notification, socket, profile_following, only_followers,
       chatNotif, setChatNotif,
       loadingBarProgress, setLoadingBarProgress,
-      loginLoading, postLoading, chatLoading, commentLoading, replyLoading
+      authLoading, loginLoading, postLoading, chatLoading, commentLoading, replyLoading
     }}>
       {props.children}
     </ConnectContext.Provider>
