@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useRef, useState } from "react";
 import ConnectContext from "../context/Connectcontext";
 import Cookies from "js-cookie";
 import commentss from "../assets/comment.svg";
-import { Heart } from "lucide-react"; // ✅ Imported dynamic Heart icon
+import { Heart, Loader2 } from "lucide-react";
 
 const Profile = () => {
   const [profile, setprofile] = useState({
@@ -27,6 +27,12 @@ const Profile = () => {
   const [replytext, setreplytext] = useState({ text: "" });
 
   const [isMobile, setIsMobile] = useState(false);
+  
+  const [isFetchingComments, setIsFetchingComments] = useState(false);
+  const [isFetchingReplies, setIsFetchingReplies] = useState(false);
+
+  // ✅ Animation state
+  const [likeAnimation, setLikeAnimation] = useState(null);
 
   const context = useContext(ConnectContext);
   const {
@@ -69,62 +75,85 @@ const Profile = () => {
 
   const SubmitComment = async (postId) => {
     if (!comtext.text.trim()) return;
+    const textToSend = comtext.text;
 
-    await postcom(postId, authdata.authtoken, comtext.text);
-
-    const allcom = await getcom(postId, authdata.authtoken);
-    const useridarray = allcom.map((c) => c.userid);
-    const usernames = await idtouser(useridarray);
-
-    setcom(allcom);
-    setcomusers(usernames);
-
-    const updated = await selfpost(authdata.authtoken);
-    setposts(updated);
-
+    // ✅ OPTIMISTIC: show comment instantly, no waiting
+    const optimisticComment = { _id: `temp_${Date.now()}`, userid: authdata.userid, text: textToSend };
+    setcom(prev => [...prev, optimisticComment]);
+    setcomusers(prev => ({ usernames: [...(prev.usernames || []), Cookies.get('username') || 'You'] }));
+    setposts(prev => prev.map(p =>
+      p._id === postId ? { ...p, comments: [...(p.comments || []), optimisticComment] } : p
+    ));
     setcomtext({ text: "" });
+
+    try {
+      await postcom(postId, authdata.authtoken, textToSend);
+      // Silently replace temp with real DB data
+      const allcom = await getcom(postId, authdata.authtoken);
+      if (Array.isArray(allcom) && allcom.length > 0) {
+        const usernames = await idtouser(allcom.map(c => c.userid));
+        setcom(allcom);
+        setcomusers(usernames);
+      }
+      // Update post comment count only — no full refetch
+      const updated = await selfpost(authdata.authtoken);
+      if (Array.isArray(updated)) {
+        setposts(prev => updated.map(serverPost => {
+          const local = prev.find(p => p._id === serverPost._id);
+          return local ? { ...serverPost, likes: local.likes } : serverPost;
+        }));
+      }
+    } catch (err) { console.error("SubmitComment error:", err); }
   };
 
   const Submitreply = async (comment_id) => {
     if (!replytext.text.trim()) return;
+    const textToSend = replytext.text;
 
-    await postreply(comment_id, authdata.authtoken, replytext.text);
-
-    const replydata = await getreply(comment_id, authdata.authtoken);
-    const ids = replydata.map((r) => r.userid);
-    const usernames = await idtouser(ids);
-
-    setreplyusers(usernames);
-    setreplies(replydata);
-
-    const updated = await selfpost(authdata.authtoken);
-    setposts(updated);
-
+    // ✅ OPTIMISTIC: show reply instantly
+    const optimisticReply = { _id: `temp_${Date.now()}`, userid: authdata.userid, text: textToSend };
+    setreplies(prev => [...prev, optimisticReply]);
+    setreplyusers(prev => ({ usernames: [...(prev.usernames || []), Cookies.get('username') || 'You'] }));
     setvisible(comment_id);
     setreplytext({ text: "" });
     handleClear();
+
+    try {
+      await postreply(comment_id, authdata.authtoken, textToSend);
+      const replydata = await getreply(comment_id, authdata.authtoken);
+      if (Array.isArray(replydata) && replydata.length > 0) {
+        const usernames = await idtouser(replydata.map(r => r.userid));
+        setreplies(replydata);
+        setreplyusers(usernames);
+      }
+    } catch (err) { console.error("Submitreply error:", err); }
   };
 
   const handleCommentClick = async (postId) => {
     if (activePostId === postId) {
       setActivePostId(null);
       setcom([]);
+      setcomusers({ usernames: [] });
       return;
     }
-
+    // ✅ Clear + loading before opening — spinner on first render, no "No comments" flash
+    setcom([]);
+    setcomusers({ usernames: [] });
+    setIsFetchingComments(true);
     setActivePostId(postId);
 
-    const compost = await getcom(postId, authdata.authtoken);
-    const useridarray = compost.map((c) => c.userid);
-    const usernames = await idtouser(useridarray);
-
-    setcom(compost);
-    setcomusers(usernames);
+    try {
+      const compost = await getcom(postId, authdata.authtoken);
+      if (Array.isArray(compost) && compost.length > 0) {
+        const usernames = await idtouser(compost.map(c => c.userid));
+        setcom(compost);
+        setcomusers(usernames);
+      }
+    } catch (err) { console.error(err); }
+    finally { setIsFetchingComments(false); }
   };
 
-  // ✅ Instagram-style Optimistic Like Update
   const handlelike = async (post, isLiked) => {
-    // Optimistic UI Update
     setposts((prevPosts) => 
       prevPosts.map((p) => {
         if (p._id === post._id) {
@@ -137,7 +166,6 @@ const Profile = () => {
       })
     );
 
-    // API Call
     try {
       if (isLiked) {
         await dislikepost(post._id, authdata.authtoken);
@@ -145,22 +173,50 @@ const Profile = () => {
         await likepost(post._id, authdata.authtoken);
       }
     } catch (error) {
-      console.error("Like action failed", error);
-      const updated = await selfpost(authdata.authtoken);
-      setposts(updated);
+      console.error("Like action failed — rolling back", error);
+      // Rollback optimistic update only, no full refetch
+      setposts(prevPosts =>
+        prevPosts.map(p => {
+          if (p._id === post._id) {
+            const rolledBack = isLiked
+              ? [...p.likes, authdata?.userid]
+              : p.likes.filter(id => String(id) !== String(authdata?.userid));
+            return { ...p, likes: rolledBack };
+          }
+          return p;
+        })
+      );
+    }
+  };
+
+  // ✅ New Double Tap Handler
+  const handleDoubleTap = (post, isLiked) => {
+    setLikeAnimation(post._id);
+    setTimeout(() => setLikeAnimation(null), 1000);
+    
+    // Only like, never unlike on double-tap
+    if (!isLiked) {
+      handlelike(post, isLiked);
     }
   };
 
   const handlereply = async (comment_id) => {
     if (visible === comment_id) return setvisible(null);
-
-    const replydata = await getreply(comment_id, authdata.authtoken);
-    const ids = replydata.map((r) => r.userid);
-    const usernames = await idtouser(ids);
-
-    setreplyusers(usernames);
-    setreplies(replydata);
+    // ✅ Clear stale + loading before opening replies
+    setreplies([]);
+    setreplyusers({ usernames: [] });
+    setIsFetchingReplies(true);
     setvisible(comment_id);
+
+    try {
+      const replydata = await getreply(comment_id, authdata.authtoken);
+      if (Array.isArray(replydata) && replydata.length > 0) {
+        const usernames = await idtouser(replydata.map(r => r.userid));
+        setreplies(replydata);
+        setreplyusers(usernames);
+      }
+    } catch (err) { console.error(err); }
+    finally { setIsFetchingReplies(false); }
   };
 
   useEffect(() => {
@@ -174,6 +230,18 @@ const Profile = () => {
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-white -mt-20 pt-20">
       
+      {/* CSS for heart animation */}
+      <style>
+        {`
+          @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            25% { transform: scale(1.3); opacity: 1; }
+            75% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(1); opacity: 0; }
+          }
+        `}
+      </style>
+
       <div className="grid grid-cols-12 gap-6 max-w-[1600px] mx-auto px-4 md:px-10 pb-10">
 
         {/* LEFT PROFILE */}
@@ -231,7 +299,6 @@ const Profile = () => {
 
           {posts.length > 0 ? (
             posts.map((post) => {
-              // ✅ Determine if the current user has liked this specific post
               const isLiked = post.likes?.some((id) => String(id) === String(authdata?.userid));
 
               return (
@@ -248,10 +315,24 @@ const Profile = () => {
 
                   {post.image && (
                     <div 
-                      className="w-full h-72 rounded-xl overflow-hidden bg-black cursor-pointer"
-                      onDoubleClick={() => { if (!isLiked) handlelike(post, false); }} // ✅ Double tap to like
+                      className="relative w-full h-72 rounded-xl overflow-hidden bg-black cursor-pointer"
+                      onDoubleClick={() => handleDoubleTap(post, isLiked)} // ✅ Replaced inline logic
                     >
                       <img src={post.image} alt="" className="w-full h-full object-cover select-none" />
+                      
+                      {/* ✅ Animated Heart Overlay */}
+                      {likeAnimation === post._id && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/10 z-10 pointer-events-none">
+                          <Heart 
+                            className="text-white fill-white drop-shadow-2xl"
+                            style={{
+                              width: '120px', 
+                              height: '120px',
+                              animation: 'popIn 0.8s ease-out forwards'
+                            }} 
+                          />
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -301,27 +382,29 @@ const Profile = () => {
                   {isMobile && activePostId === post._id && (
                     <div className="mt-5 bg-[#111] p-4 rounded-xl border border-white/5">
 
-                      {com.length === 0 && (
+                      {isFetchingComments ? (
+                        <div className="flex justify-center py-4"><Loader2 className="animate-spin text-yellow-400" size={24} /></div>
+                      ) : com.length === 0 ? (
                         <div className="text-gray-400 text-center">No comments yet</div>
-                      )}
-
-                      {com.map((c, idx) => (
+                      ) : com.map((c, idx) => (
                         <div key={c._id} className="mb-4 bg-[#1a1a1a] p-3 rounded-lg border border-white/5">
 
                           <div className="font-semibold text-gray-200">{comusers.usernames[idx]}</div>
                           <div className="text-gray-300 mt-1">{c.text}</div>
 
                           <div className="mt-3 pl-3 border-l-2 border-yellow-400">
-                            {visible === c._id &&
-                              replies.map((r, i) => (
-                                <div key={i} className="text-sm text-gray-300 mb-2">
-                                  <span className="font-semibold text-gray-100">
-                                    {replyusers.usernames[i]}:
-                                  </span>{" "}
-                                  {r.text}
-                                </div>
-                              ))}
-
+                            {visible === c._id && (
+                              isFetchingReplies
+                                ? <div className="flex items-center gap-1 mb-2"><Loader2 className="animate-spin text-yellow-400" size={12} /><span className="text-xs text-gray-500">Loading replies...</span></div>
+                                : replies.length > 0
+                                  ? replies.map((r, i) => (
+                                      <div key={i} className="text-sm text-gray-300 mb-2">
+                                        <span className="font-semibold text-gray-100">{replyusers.usernames[i]}:</span>{" "}
+                                        {r.text}
+                                      </div>
+                                    ))
+                                  : <div className="text-xs text-gray-500 mb-1">No replies yet</div>
+                            )}
                             <button
                               className="text-yellow-400 text-xs mt-1 font-medium"
                               onClick={() => handlereply(c._id)}
@@ -374,7 +457,9 @@ const Profile = () => {
                     Comments on {profile.username}'s post
                   </div>
 
-                  {com.length > 0 ? (
+                  {isFetchingComments ? (
+                    <div className="flex justify-center py-4"><Loader2 className="animate-spin text-yellow-400" size={24} /></div>
+                  ) : com.length > 0 ? (
                     com.map((comment, idx) => (
                       <div key={comment._id} className="bg-[#111] p-3 rounded-xl mb-3 border border-white/5">
                         <div className="font-semibold text-gray-200">
@@ -391,18 +476,17 @@ const Profile = () => {
 
                         {visible === comment._id && (
                           <div className="mt-2 pl-3 border-l-2 border-yellow-400">
-                            {replies.length > 0 ? (
-                              replies.map((r, i) => (
-                                <div key={i} className="text-sm text-gray-300 mb-1">
-                                  <span className="font-semibold text-gray-100">
-                                    {replyusers.usernames[i]}:
-                                  </span>{" "}
-                                  {r.text}
-                                </div>
-                              ))
-                            ) : (
-                              <div className="text-gray-500 text-sm">No replies</div>
-                            )}
+                            {isFetchingReplies
+                              ? <div className="flex items-center gap-1 py-1"><Loader2 className="animate-spin text-yellow-400" size={12} /><span className="text-xs text-gray-500">Loading replies...</span></div>
+                              : replies.length > 0
+                                ? replies.map((r, i) => (
+                                    <div key={i} className="text-sm text-gray-300 mb-1">
+                                      <span className="font-semibold text-gray-100">{replyusers.usernames[i]}:</span>{" "}
+                                      {r.text}
+                                    </div>
+                                  ))
+                                : <div className="text-gray-500 text-sm">No replies yet</div>
+                            }
                           </div>
                         )}
 

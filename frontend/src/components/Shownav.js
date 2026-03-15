@@ -43,16 +43,16 @@ const Shownav = () => {
 
   const navigate = useNavigate();
 
-  // ✅ Load Profile Data from Cookies (Same logic as Showcase.js)
+  // ✅ Load Profile Data from Cookies
   useEffect(() => {
     setProfile({
       username: Cookies.get("username"),
-      profilepic: Cookies.get("profile"), // In a real app, use this src
+      profilepic: Cookies.get("profile"),
       followers: Cookies.get("followers") || 0,
       following: Cookies.get("following") || 0,
       bio: Cookies.get("bio") || "No bio available",
     });
-  }, [sidebarOpen]); // Reload when sidebar opens to ensure fresh data
+  }, [sidebarOpen]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -108,6 +108,30 @@ const Shownav = () => {
     setSidebarOpen(false);
   };
 
+  // ✅ FIXED: Check if searchuser is an array before calling .find()
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      if (!query.trim()) return;
+      
+      // Safety check to prevent the crash
+      if (!Array.isArray(searchuser)) {
+        alert("User not found");
+        return;
+      }
+
+      // Find an exact (case-insensitive) match in the loaded users database
+      const foundUser = searchuser.find(
+        (u) => u.username?.toLowerCase() === query.trim().toLowerCase()
+      );
+
+      if (foundUser) {
+        handleUserClick(foundUser);
+      } else {
+        alert("User not found");
+      }
+    }
+  };
+
   const toggleSidebar = () => setSidebarOpen((s) => !s);
   const closeSidebar = () => setSidebarOpen(false);
   const togglePostModal = () => setShowPostModal((s) => !s);
@@ -115,8 +139,8 @@ const Shownav = () => {
 
   const handleCookie = async () => {
     closeSidebar();
-    await logout_fxn(); // clears HttpOnly auth-token via server + resets authdata
-    navigate("/");      // ProtectedRoute will redirect to /login on next protected visit
+    await logout_fxn(); 
+    navigate("/");      
   };
 
   return (
@@ -144,6 +168,7 @@ const Shownav = () => {
                 id="searchuser"
                 value={query}
                 onChange={handleInputChange}
+                onKeyDown={handleKeyDown} 
                 className="w-full bg-[#1a1a1a] placeholder-gray-400 text-white rounded-full py-2 px-4 border border-white/10 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition text-base"
                 placeholder="Search..."
               />
@@ -224,10 +249,9 @@ const Shownav = () => {
 
         <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
           
-          {/* ✅ 1. PROFILE SECTION (Added) */}
           <div className="bg-[#1a1a1a] rounded-xl p-4 border border-white/10 flex flex-col items-center text-center">
             <div className="w-20 h-20 rounded-full ring-2 ring-yellow-400 overflow-hidden mb-3">
-              <img src="https://i.pravatar.cc/300" alt="profile" className="w-full h-full object-cover" />
+              <img src={profile.profilepic || "https://i.pravatar.cc/300"} alt="profile" className="w-full h-full object-cover" />
             </div>
             
             <div className="text-lg font-bold">{profile.username}</div>
@@ -254,7 +278,6 @@ const Shownav = () => {
             </Link>
           </div>
 
-          {/* ✅ 2. ACTION BUTTONS (Back button removed) */}
           <button
             onClick={() => { togglePostModal(); closeSidebar(); }}
             className="w-full text-center bg-yellow-400 text-black py-3 rounded-lg font-bold hover:opacity-90 transition shadow-lg shadow-yellow-400/10"
@@ -262,7 +285,6 @@ const Shownav = () => {
             Create New Post
           </button>
 
-          {/* ✅ 3. ACCOUNTS YOU DON'T FOLLOW BACK */}
           {followback.length > 0 && (
             <div className="mt-2 pt-4 border-t border-white/10">
               <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 px-1">
@@ -273,14 +295,13 @@ const Shownav = () => {
                   <div key={idx} className="bg-[#1a1a1a] rounded-lg p-3 border border-white/5">
                     <div className="flex items-center gap-3 mb-3">
                       <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden shrink-0">
-                         <img src="https://i.pravatar.cc/300" alt="user" className="w-full h-full object-cover" />
+                         <img src={f.profilepic || "https://i.pravatar.cc/300"} alt="user" className="w-full h-full object-cover" />
                       </div>
                       <div className="min-w-0">
                         <div className="font-bold text-sm truncate">{f.username}</div>
                         <div className="text-xs text-yellow-400">Follows you</div>
                       </div>
                     </div>
-                    {/* Compact Actions */}
                     <div className="grid grid-cols-2 gap-2">
                       <button className="bg-[#333] hover:bg-[#444] text-xs py-2 rounded text-white transition">Remove</button>
                       <button className="bg-yellow-400 hover:opacity-90 text-xs py-2 rounded text-black font-bold transition">Confirm</button>
@@ -291,7 +312,6 @@ const Shownav = () => {
             </div>
           )}
 
-          {/* ✅ 4. LOGOUT BUTTON (Yellow) */}
           <button
             onClick={handleCookie}
             className="mt-auto w-full text-center py-3 rounded-lg font-semibold border border-yellow-400 text-yellow-400 hover:bg-yellow-400 hover:text-black transition"
